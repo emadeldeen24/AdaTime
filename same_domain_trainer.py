@@ -91,7 +91,7 @@ class same_domain_Trainer(object):
         # Logging
         self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
         os.makedirs(self.exp_log_dir, exist_ok=True)
-        copy_Files(self.exp_log_dir, self.data_type, self.da_method)  # save a copy of training files:
+        copy_Files(self.exp_log_dir)  # save a copy of training files:
 
         scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
