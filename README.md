@@ -2,7 +2,7 @@
 #### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li*
 
 **AdaTime** is a PyTorch suite to systematically and fairly evaluate different domain adaptation methods on time series data.
-
+<img src="adatime.png" width="1000">
 
 # Disclaimer: This work is for research only and not for commercial use!
 
