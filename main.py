@@ -17,15 +17,13 @@ parser.add_argument('--run_description',        default='test',            type=
 parser.add_argument('--da_method',              default='Deep_Coral',             type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 
 # ========= Select the DATASET ==============
-parser.add_argument('--data_path',              default=r'D:\Codes\AdaTime\data',           type=str, help='Path containing dataset')
+parser.add_argument('--data_path',              default=r'./data',           type=str, help='Path containing dataset')
 parser.add_argument('--dataset',                default='HAR',              type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
 
 # ========= Select the BACKBONE ==============
 parser.add_argument('--backbone',               default='CNN',              type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
 
-
 # ========= Experiment settings ===============
-
 parser.add_argument('--num_runs',               default=3,                  type=int, help='Number of consecutive run with different seeds')
 parser.add_argument('--device',                 default='cuda:0',           type=str, help='cpu or cuda')
 
