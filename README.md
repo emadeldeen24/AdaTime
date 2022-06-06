@@ -22,10 +22,10 @@
 
 ### Available Datasets
 We used four public datasets in this study. We also provide the **preprocessed** versions as follows:
-- [Sleep-EDF](https://researchdata.ntu.edu.sg/privateurl.xhtml?token=9f854e11-4384-44d4-bad8-9d2894c76f07)
-- [UCIHAR](https://researchdata.ntu.edu.sg/privateurl.xhtml?token=ddaf52b4-37ef-4578-aaed-d9d4c8a942c0)
-- [HHAR](https://researchdata.ntu.edu.sg/privateurl.xhtml?token=e44f10b6-e160-4e63-8fcf-8060aadbd3e5)
-- [WISDM](https://researchdata.ntu.edu.sg/privateurl.xhtml?token=55e459de-c9d7-470f-8453-ad086c304f9d)
+- [Sleep-EDF]([https://researchdata.ntu.edu.sg/privateurl.xhtml?token=9f854e11-4384-44d4-bad8-9d2894c76f07](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/UD1IM9))
+- [UCIHAR]([https://researchdata.ntu.edu.sg/privateurl.xhtml?token=ddaf52b4-37ef-4578-aaed-d9d4c8a942c0](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/0SYHTZ))
+- [HHAR]([https://researchdata.ntu.edu.sg/privateurl.xhtml?token=e44f10b6-e160-4e63-8fcf-8060aadbd3e5](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/OWDFXO))
+- [WISDM]([https://researchdata.ntu.edu.sg/privateurl.xhtml?token=55e459de-c9d7-470f-8453-ad086c304f9d](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/KJWE5B))
 
 ### Adding New Dataset
 
