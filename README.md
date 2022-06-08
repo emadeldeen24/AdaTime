@@ -1,4 +1,4 @@
-# AdaTime: A Systematic Evaluation of Domain Adaptation Algorithms on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)]
+# AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)]
 #### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li*
 
 **AdaTime** is a PyTorch suite to systematically and fairly evaluate different domain adaptation methods on time series data.
