@@ -268,7 +268,6 @@ class cross_domain_trainer(object):
         single_exp.sort()
 
         src_ids = [single_exp[i].split("_")[0] for i in range(len(single_exp))]
-        num_runs = src_ids.count(src_ids[0])
         scenarios_ids = np.unique(["_".join(i.split("_")[:3]) for i in single_exp])
 
         for scenario in single_exp:
@@ -277,8 +276,8 @@ class cross_domain_trainer(object):
             results = results.append(scores)
             results.iloc[len(results) - 1, 0] = scenario
 
-        avg_results = results.groupby(np.arange(len(results)) // num_runs).mean()
-        std_results = results.groupby(np.arange(len(results)) // num_runs).std()
+        avg_results = results.groupby(np.arange(len(results)) // self.num_runs).mean()
+        std_results = results.groupby(np.arange(len(results)) // self.num_runs).std()
 
         avg_results.loc[len(avg_results)] = avg_results.mean()
         avg_results.insert(0, "scenario", list(scenarios_ids) + ['mean'], True)
