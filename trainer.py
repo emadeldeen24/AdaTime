@@ -268,7 +268,7 @@ class cross_domain_trainer(object):
         single_exp.sort()
 
         src_ids = [single_exp[i].split("_")[0] for i in range(len(single_exp))]
-        scenarios_ids = np.unique(["_".join(i.split("_")[:3]) for i in single_exp])
+        scenarios_ids = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
 
         for scenario in single_exp:
             scenario_dir = os.path.join(exp, scenario)
