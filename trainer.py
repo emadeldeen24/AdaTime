@@ -263,25 +263,25 @@ class cross_domain_trainer(object):
         else:
             results = pd.DataFrame(columns=["scenario", "acc", "f1"])
 
-        single_exp = os.listdir(exp)
-        single_exp = [i for i in single_exp if "_to_" in i]
-        single_exp.sort()
+        scenarios_list = os.listdir(exp)
+        scenarios_list = [i for i in scenarios_list if "_to_" in i]
+        exp_list.sort()
 
         src_ids = [single_exp[i].split("_")[0] for i in range(len(single_exp))]
-        scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
+        unique_scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
 
-        for scenario in single_exp:
+        for scenario in scenarios_list:
             scenario_dir = os.path.join(exp, scenario)
             scores = pd.read_excel(os.path.join(scenario_dir, 'scores.xlsx'))
-            results = results.append(scores)
-            results.iloc[len(results) - 1, 0] = scenario
+            scores.insert(0, 'scenario', scenario)
+            results = pd.concat([results, scores])
 
         avg_results = results.groupby(np.arange(len(results)) // self.num_runs).mean()
         std_results = results.groupby(np.arange(len(results)) // self.num_runs).std()
 
         avg_results.loc[len(avg_results)] = avg_results.mean()
-        avg_results.insert(0, "scenario", list(scenarios_names) + ['mean'], True)
-        std_results.insert(0, "scenario", list(scenarios_names), True)
+        avg_results.insert(0, "scenario", list(unique_scenarios_names) + ['mean'], True)
+        std_results.insert(0, "scenario", list(unique_scenarios_names), True)
 
         report_save_path_avg = os.path.join(exp, f"Average_results.xlsx")
         report_save_path_std = os.path.join(exp, f"std_results.xlsx")
