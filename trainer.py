@@ -273,11 +273,11 @@ class cross_domain_trainer(object):
         for scenario in scenarios_list:
             scenario_dir = os.path.join(exp, scenario)
             scores = pd.read_excel(os.path.join(scenario_dir, 'scores.xlsx'))
-            scores.insert(0, 'scenario', scenario)
+            scores.insert(0, 'scenario', '_'.join(scenario.split('_')[:-2]))
             results = pd.concat([results, scores])
 
-        avg_results = results.groupby(np.arange(len(results)) // self.num_runs).mean()
-        std_results = results.groupby(np.arange(len(results)) // self.num_runs).std()
+        avg_results = results.groupby('scenario').mean()
+        std_results = results.groupby('scenario').std()
 
         avg_results.loc[len(avg_results)] = avg_results.mean()
         avg_results.insert(0, "scenario", list(unique_scenarios_names) + ['mean'], True)
