@@ -268,7 +268,7 @@ class cross_domain_trainer(object):
         single_exp.sort()
 
         src_ids = [single_exp[i].split("_")[0] for i in range(len(single_exp))]
-        scenarios_ids = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
+        scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
 
         for scenario in single_exp:
             scenario_dir = os.path.join(exp, scenario)
@@ -280,8 +280,8 @@ class cross_domain_trainer(object):
         std_results = results.groupby(np.arange(len(results)) // self.num_runs).std()
 
         avg_results.loc[len(avg_results)] = avg_results.mean()
-        avg_results.insert(0, "scenario", list(scenarios_ids) + ['mean'], True)
-        std_results.insert(0, "scenario", list(scenarios_ids), True)
+        avg_results.insert(0, "scenario", list(scenarios_names) + ['mean'], True)
+        std_results.insert(0, "scenario", list(scenarios_names), True)
 
         report_save_path_avg = os.path.join(exp, f"Average_results.xlsx")
         report_save_path_std = os.path.join(exp, f"std_results.xlsx")
