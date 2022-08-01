@@ -265,7 +265,7 @@ class cross_domain_trainer(object):
 
         scenarios_list = os.listdir(exp)
         scenarios_list = [i for i in scenarios_list if "_to_" in i]
-        exp_list.sort()
+        scenarios_list.sort()
 
         src_ids = [single_exp[i].split("_")[0] for i in range(len(single_exp))]
         unique_scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
