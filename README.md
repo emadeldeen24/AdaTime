@@ -118,6 +118,11 @@ and the different risks scores.
 - By the end of the all the runs, you will find the overall average and std results in the run directory.
 
 
+<p align="center">
+<img src="misc/results.PNG" width="900" class="center">
+</p>
+
+
 ## Citation
 If you found this work useful for you, please consider citing it.
 ```
