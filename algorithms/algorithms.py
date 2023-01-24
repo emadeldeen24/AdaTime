@@ -3,8 +3,8 @@ import torch.nn as nn
 import numpy as np
 
 from models.models import classifier, ReverseLayerF, Discriminator, RandomLayer, Discriminator_CDAN, \
-    codats_classifier, AdvSKM_Disc
-from models.loss import MMD_loss, CORAL, ConditionalEntropyLoss, VAT, LMMD_loss, HoMM_loss
+    codats_classifier, AdvSKM_Disc, CNN_ATTN
+from models.loss import MMD_loss, CORAL, ConditionalEntropyLoss, VAT, LMMD_loss, HoMM_loss, NTXentLoss, SupConLoss
 from utils import EMA
 
 
@@ -695,3 +695,138 @@ class AdvSKM(Algorithm):
         self.optimizer.step()
 
         return {'Total_loss': loss.item(), 'MMD_loss': mmd_loss_adv.item(), 'Src_cls_loss': src_cls_loss.item()}
+    
+class SASA(nn.Module):
+    def __init__(self, backbone_fe, configs, hparams, device):
+        super(SASA, self).__init__()
+
+       # feature_length for classifier
+        configs.features_len =1
+        self.classifier = classifier(configs)
+       # feature length for feature extractor
+        configs.features_len =1
+        self.feature_extractor = CNN_ATTN(configs)
+
+        self.network = nn.Sequential(self.feature_extractor, self.classifier)
+
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"])
+
+        self.cross_entropy = nn.CrossEntropyLoss()
+
+        self.hparams = hparams
+        self.device = device
+
+    def update(self, src_x, src_y, tgt_x):
+        self.optimizer.zero_grad()
+
+        # Extract features
+        src_feature = self.feature_extractor(src_x)
+        tgt_feature = self.feature_extractor(tgt_x)
+
+        # source classification loss
+        y_pred = self.classifier(src_feature)
+        src_cls_loss = self.cross_entropy(y_pred, src_y)
+
+        # MMD loss
+        domain_loss_intra = self.mmd_loss(src_struct=src_feature,
+                                          tgt_struct=tgt_feature, weight=self.hparams['domain_loss_wt'])
+
+        # total loss
+        total_loss = self.hparams['src_cls_loss_wt'] * src_cls_loss + domain_loss_intra
+
+        # calculate gradients
+        total_loss.backward()
+
+        # update the weights
+        self.optimizer.step()
+
+        return {'Total_loss': total_loss.item(), 'MMD_loss': domain_loss_intra.item(),
+                'Src_cls_loss': src_cls_loss.item()}
+    def mmd_loss(self, src_struct, tgt_struct, weight):
+        delta = torch.mean(src_struct - tgt_struct, dim=-2)
+        loss_value = torch.norm(delta, 2) * weight
+        return loss_value
+
+
+class CoTMix(Algorithm):
+    def __init__(self, backbone_fe, configs, hparams, device):
+        super(CoTMix, self).__init__(configs)
+
+        self.feature_extractor = backbone_fe(configs)
+        self.classifier = classifier(configs)
+
+        self.network = nn.Sequential(self.feature_extractor, self.classifier)
+
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+        self.hparams = hparams
+
+        self.contrastive_loss = NTXentLoss(device, hparams["batch_size"], 0.2, True)
+        self.entropy_loss = ConditionalEntropyLoss()
+        self.sup_contrastive_loss = SupConLoss(device)
+
+    def update(self, src_x, src_y, trg_x):
+        # ====== Temporal Mixup =====================
+        mix_ratio = round(self.hparams["mix_ratio"], 2)
+        temporal_shift = self.hparams["temporal_shift"]
+        h = temporal_shift // 2  # half
+
+        src_dominant = mix_ratio * src_x + (1 - mix_ratio) * \
+                       torch.mean(torch.stack([torch.roll(trg_x, -i, 2) for i in range(-h, h)], 2), 2)
+
+        trg_dominant = mix_ratio * trg_x + (1 - mix_ratio) * \
+                       torch.mean(torch.stack([torch.roll(src_x, -i, 2) for i in range(-h, h)], 2), 2)
+
+        # ====== Source =====================
+        self.optimizer.zero_grad()
+
+        # Src original features
+        src_orig_feat = self.feature_extractor(src_x)
+        src_orig_logits = self.classifier(src_orig_feat)
+
+        # Target original features
+        trg_orig_feat = self.feature_extractor(trg_x)
+        trg_orig_logits = self.classifier(trg_orig_feat)
+
+        # -----------  The two main losses
+        # Cross-Entropy loss
+        src_cls_loss = self.cross_entropy(src_orig_logits, src_y)
+        loss = src_cls_loss * round(self.hparams["src_cls_weight"], 2)
+
+        # Target Entropy loss
+        trg_entropy_loss = self.entropy_loss(trg_orig_logits)
+        loss += trg_entropy_loss * round(self.hparams["trg_entropy_weight"], 2)
+
+        # -----------  Auxiliary losses
+        # Extract source-dominant mixup features.
+        src_dominant_feat = self.feature_extractor(src_dominant)
+        src_dominant_logits = self.classifier(src_dominant_feat)
+
+        # supervised contrastive loss on source domain side
+        src_concat = torch.cat([src_orig_logits.unsqueeze(1), src_dominant_logits.unsqueeze(1)], dim=1)
+        src_supcon_loss = self.sup_contrastive_loss(src_concat, src_y)
+        loss += src_supcon_loss * round(self.hparams["src_supCon_weight"], 2)
+
+        # Extract target-dominant mixup features.
+        trg_dominant_feat = self.feature_extractor(trg_dominant)
+        trg_dominant_logits = self.classifier(trg_dominant_feat)
+
+        # Unsupervised contrastive loss on target domain side
+        trg_con_loss = self.contrastive_loss(trg_orig_logits, trg_dominant_logits)
+        loss += trg_con_loss * round(self.hparams["trg_cont_weight"], 2)
+
+        loss.backward()
+        self.optimizer.step()
+
+        return {'Total_loss': loss.item(),
+                'src_cls_loss': src_cls_loss.item(),
+                'trg_entropy_loss': trg_entropy_loss.item(),
+                'src_supcon_loss': src_supcon_loss.item(),
+                'trg_con_loss': trg_con_loss.item()
+                }
