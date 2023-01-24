@@ -1,4 +1,4 @@
-# AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)]
+# AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)] [[Cite](#citation)]
 #### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li* <br/> * Equal contribution
 
 **AdaTime** is a PyTorch suite to systematically and fairly evaluate different domain adaptation methods on time series data.
@@ -116,6 +116,19 @@ is the run_id (you can have multiple runs by assigning `--num_runs` arg).
 - Under each directory, you will find the classification report, a log file, checkpoint, 
 and the different risks scores.
 - By the end of the all the runs, you will find the overall average and std results in the run directory.
+
+
+## Citation
+If you found this work useful for you, please consider citing it.
+```
+@article{adatime,
+  title   = {AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data},
+  author  = {Ragab, Mohamed and Eldele, Emadeldeen and Tan, Wee Ling and Foo, Chuan-Sheng and Chen, Zhenghua and Wu, Min and Kwoh, Chee Keong and Li, Xiaoli},
+  journal = {arXiv preprint arXiv:2203.08321},
+  year    = {2022}
+}
+```
+
 
 ## Contact
 For any issues/questions regarding the paper or reproducing the results, please contact any of the following.   
