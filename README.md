@@ -1,12 +1,11 @@
 # AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)]
-#### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li*
+#### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li* <br/> * Equal contribution
 
 **AdaTime** is a PyTorch suite to systematically and fairly evaluate different domain adaptation methods on time series data.
-<img src="adatime.PNG" width="1000">
 
-# Disclaimer: This work is for research only and not for commercial use!
-
-
+<p align="center">
+<img src="misc/adatime.PNG" width="900" class="center">
+</p>
 
 ## Requirmenets:
 - Python3
@@ -26,6 +25,7 @@ We used four public datasets in this study. We also provide the **preprocessed**
 - [UCIHAR](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/0SYHTZ)
 - [HHAR](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/OWDFXO)
 - [WISDM](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/KJWE5B)
+- [FD](https://researchdata.ntu.edu.sg/dataset.xhtml?persistentId=doi:10.21979/N9/PU85XN)
 
 ### Adding New Dataset
 
@@ -59,6 +59,8 @@ the training parameters.
 - [DDC](https://arxiv.org/abs/1412.3474)
 - [CoDATS](https://arxiv.org/pdf/2005.10996.pdf)
 - [AdvSKM](https://www.ijcai.org/proceedings/2021/0378.pdf)
+- [SASA](https://ojs.aaai.org/index.php/AAAI/article/view/16846/16653)
+- [CoTMix](https://arxiv.org/pdf/2212.01555.pdf)
 
 
 ### Adding New Algorithm
@@ -102,7 +104,7 @@ python main.py  --experiment_description exp1_sweep  \
 ```
 Upon the run, you will find the running progress in the specified project page in wandb.
 
-`Note:` If you got cuda out of memory error during testing, this is probably due to DEV risk calculations
+`Note:` If you got cuda out of memory error during testing, this is probably due to DEV risk calculations.
 
 
 ### Upper and Lower bounds
