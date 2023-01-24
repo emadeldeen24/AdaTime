@@ -61,7 +61,8 @@ class same_domain_Trainer(object):
         self.dataset_configs.final_out_channels = self.dataset_configs.lstm_hid if args.backbone == "LSTM" else self.dataset_configs.final_out_channels
 
         # Specify number of hparams
-        self.default_hparams = {**self.hparams_class.train_params}
+        self.default_hparams = {**self.hparams_class.alg_hparams[self.da_method],
+                                **self.hparams_class.train_params}
 
     def sweep(self):
 
@@ -267,19 +268,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     # ========= Select the DA methods ============
-    parser.add_argument('--da_method', default='Source_only', type=str,
+    parser.add_argument('--da_method', default='Target_only', type=str,
                         help='Source_only, Target_only')
 
     # ========= Select the DATASET ==============
-    parser.add_argument('--selected_dataset', default='HHAR_SA', type=str,
+    parser.add_argument('--selected_dataset', default='HAR', type=str,
                         help='Dataset of choice: WISDM, EEG, HAR, HHAR_SA')
 
     # ========= Select the BACKBONE ==============
-    parser.add_argument('--backbone', default='TCN', type=str,
+    parser.add_argument('--backbone', default='CNN', type=str,
                         help='Backbone of choice: CNN - RESNET18 - RESNET18_REDUCED - TCN')
 
     # ========= Experiment settings ===============
-    parser.add_argument('--data_path', default='./data', type=str, help='Path containing dataset')
+    parser.add_argument('--data_path', default=r'./data', type=str, help='Path containing dataset')
     parser.add_argument('--num_runs', default=3, type=int, help='Number of consecutive run with different seeds')
     parser.add_argument('--device', default='cuda:0', type=str, help='cpu or cuda')
     parser.add_argument('--is_sweep', default=False, type=bool, help='singe run or sweep')
