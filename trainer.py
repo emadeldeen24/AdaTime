@@ -5,7 +5,7 @@ import os
 import wandb
 import pandas as pd
 import numpy as np
-from dataloader.dataloader import data_generator, few_shot_data_generator, generator_percentage_of_data
+from dataloader.dataloader import data_generator, few_shot_data_generator
 from configs.data_model_configs import get_dataset_class
 from configs.hparams import get_hparams_class
 
@@ -71,7 +71,7 @@ class cross_domain_trainer(object):
         sweep_config = {
             'method': self.hp_search_strategy,
             'metric': {'name': self.metric_to_minimize, 'goal': 'minimize'},
-            'name': self.da_method,
+            'name': self.da_method + '_' + self.backbone,
             'parameters': {**sweep_alg_hparams[self.da_method]}
         }
         sweep_id = wandb.sweep(sweep_config, project=self.sweep_project_wandb, entity=self.wandb_entity)
@@ -83,11 +83,11 @@ class cross_domain_trainer(object):
 
     def train(self):
         if self.is_sweep:
-            wandb.init(config=self.default_hparams)
+            run = wandb.init(config=self.default_hparams)
             run_name = f"sweep_{self.dataset}"
         else:
             run_name = f"{self.run_description}"
-            wandb.init(config=self.default_hparams, mode="online", name=run_name)
+            run = wandb.init(config=self.default_hparams, mode="online", name=run_name)
 
         self.hparams = wandb.config
         # Logging
@@ -97,8 +97,7 @@ class cross_domain_trainer(object):
 
         scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
-        self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk': [],
-                        'trg_risk': [], 'dev_risk': []}
+        self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
 
         for i in scenarios:
             src_id = i[0]
@@ -166,6 +165,8 @@ class cross_domain_trainer(object):
             allow_mixed_types=True)})
         wandb.log({'avg_results': wandb.Table(dataframe=self.averages_results_df, allow_mixed_types=True)})
         wandb.log({'std_results': wandb.Table(dataframe=self.std_results_df, allow_mixed_types=True)})
+        
+        run.finish()
 
     def evaluate(self):
         feature_extractor = self.algorithm.feature_extractor.to(self.device)
@@ -208,10 +209,11 @@ class cross_domain_trainer(object):
                                                              self.hparams)
         self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,
                                                              self.hparams)
-        self.few_shot_dl = few_shot_data_generator(self.trg_test_dl)
+        # self.few_shot_dl_2 = few_shot_data_generator(self.trg_test_dl, 2)
+        self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
+        # self.few_shot_dl_10 = few_shot_data_generator(self.trg_test_dl, 10)
+        # self.few_shot_dl_15 = few_shot_data_generator(self.trg_test_dl, 15)
 
-        # self.src_train_dl = generator_percentage_of_data(self.src_train_dl_)
-        # self.trg_train_dl = generator_percentage_of_data(self.trg_train_dl_)
 
     def create_save_dir(self):
         if not os.path.exists(self.save_dir):
@@ -228,20 +230,25 @@ class cross_domain_trainer(object):
         if self.is_sweep:
             self.src_risk = calculate_risk(self.algorithm, self.src_test_dl, self.device)
             self.trg_risk = calculate_risk(self.algorithm, self.trg_test_dl, self.device)
-            self.few_shot_trg_risk = calculate_risk(self.algorithm, self.few_shot_dl, self.device)
+            # self.few_shot_trg_risk_2 = calculate_risk(self.algorithm, self.few_shot_dl_2, self.device)
+            self.few_shot_trg_risk_5 = calculate_risk(self.algorithm, self.few_shot_dl_5, self.device)
+            # self.few_shot_trg_risk_10 = calculate_risk(self.algorithm, self.few_shot_dl_10, self.device)
+            # self.few_shot_trg_risk_15 = calculate_risk(self.algorithm, self.few_shot_dl_15, self.device)
             self.dev_risk = calc_dev_risk(self.algorithm, self.src_train_dl, self.trg_train_dl, self.src_test_dl,
                                           self.dataset_configs, self.device)
 
             run_metrics = {'accuracy': self.acc,
                            'f1_score': self.f1,
                            'src_risk': self.src_risk,
-                           'few_shot_trg_risk': self.few_shot_trg_risk,
+                           # 'few_shot_trg_risk_2': self.few_shot_trg_risk_2,
+                           'few_shot_trg_risk_5': self.few_shot_trg_risk_5,
+                           # 'few_shot_trg_risk_10': self.few_shot_trg_risk_10,
+                           # 'few_shot_trg_risk_15': self.few_shot_trg_risk_15,
                            'trg_risk': self.trg_risk,
                            'dev_risk': self.dev_risk}
 
-            df = pd.DataFrame(columns=["acc", "f1", "src_risk", "few_shot_trg_risk", "trg_risk", "dev_risk"])
-            df.loc[0] = [self.acc, self.f1, self.src_risk, self.few_shot_trg_risk, self.trg_risk,
-                         self.dev_risk]
+            df = pd.DataFrame(columns=["acc", "f1", "src_risk", "few_shot_trg_risk_5", "trg_risk", "dev_risk"])
+            df.loc[0] = [self.acc, self.f1, self.src_risk, self.few_shot_trg_risk_5, self.trg_risk, self.dev_risk]
         else:
             run_metrics = {'accuracy': self.acc, 'f1_score': self.f1}
             df = pd.DataFrame(columns=["acc", "f1"])
@@ -255,18 +262,16 @@ class cross_domain_trainer(object):
 
     def calc_overall_results(self):
         exp = self.exp_log_dir
-
-        # for exp in experiments:
         if self.is_sweep:
             results = pd.DataFrame(
-                columns=["scenario", "acc", "f1", "src_risk", "few_shot_trg_risk", "trg_risk", "dev_risk"])
+                columns=["acc", "f1", "src_risk", "few_shot_trg_risk_5", "trg_risk", "dev_risk"])
         else:
             results = pd.DataFrame(columns=["scenario", "acc", "f1"])
 
         scenarios_list = os.listdir(exp)
         scenarios_list = [i for i in scenarios_list if "_to_" in i]
         scenarios_list.sort()
-
+        
         unique_scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
 
         for scenario in scenarios_list:
@@ -277,10 +282,14 @@ class cross_domain_trainer(object):
 
         avg_results = results.groupby('scenario').mean()
         std_results = results.groupby('scenario').std()
-
-        avg_results.loc[len(avg_results)] = avg_results.mean()
-        avg_results.insert(0, "scenario", list(unique_scenarios_names) + ['mean'], True)
+        
+        avg_results.insert(0, "scenario", list(unique_scenarios_names) , True)
         std_results.insert(0, "scenario", list(unique_scenarios_names), True)
+
+        allover_avg = pd.DataFrame([avg_results.mean()], index=["mean"], columns=avg_results.columns)
+        avg_results = pd.concat([avg_results, allover_avg])
+        allover_std = pd.DataFrame([std_results.mean()], index=["mean"], columns=std_results.columns)
+        std_results = pd.concat([std_results, allover_std])
 
         report_save_path_avg = os.path.join(exp, f"Average_results.xlsx")
         report_save_path_std = os.path.join(exp, f"std_results.xlsx")
