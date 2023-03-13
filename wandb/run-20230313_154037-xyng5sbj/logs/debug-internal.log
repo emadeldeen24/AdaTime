@@ -1,0 +1,183 @@
+2023-03-13 15:40:37,283 INFO    StreamThr :14072 [internal.py:wandb_internal():87] W&B internal server running at pid: 14072, started at: 2023-03-13 15:40:37.282725
+2023-03-13 15:40:37,283 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: status
+2023-03-13 15:40:37,286 INFO    WriterThread:14072 [datastore.py:open_for_write():85] open: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/run-xyng5sbj.wandb
+2023-03-13 15:40:37,287 DEBUG   SenderThread:14072 [sender.py:send():336] send: header
+2023-03-13 15:40:37,307 DEBUG   SenderThread:14072 [sender.py:send():336] send: run
+2023-03-13 15:40:38,014 INFO    SenderThread:14072 [dir_watcher.py:__init__():219] watching files in: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files
+2023-03-13 15:40:38,014 INFO    SenderThread:14072 [sender.py:_start_run_threads():1078] run started: xyng5sbj with start time 1678693237.283141
+2023-03-13 15:40:38,014 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: summary_record
+2023-03-13 15:40:38,014 INFO    SenderThread:14072 [sender.py:_save_file():1332] saving file wandb-summary.json with policy end
+2023-03-13 15:40:38,016 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: check_version
+2023-03-13 15:40:38,016 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: check_version
+2023-03-13 15:40:38,105 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: run_start
+2023-03-13 15:40:38,187 DEBUG   HandlerThread:14072 [system_info.py:__init__():31] System info init
+2023-03-13 15:40:38,187 DEBUG   HandlerThread:14072 [system_info.py:__init__():46] System info init done
+2023-03-13 15:40:38,188 INFO    HandlerThread:14072 [system_monitor.py:start():183] Starting system monitor
+2023-03-13 15:40:38,188 INFO    SystemMonitor:14072 [system_monitor.py:_start():147] Starting system asset monitoring threads
+2023-03-13 15:40:38,188 INFO    HandlerThread:14072 [system_monitor.py:probe():204] Collecting system info
+2023-03-13 15:40:38,189 DEBUG   HandlerThread:14072 [system_info.py:probe():195] Probing system
+2023-03-13 15:40:38,189 INFO    SystemMonitor:14072 [interfaces.py:start():187] Started cpu monitoring
+2023-03-13 15:40:38,190 INFO    SystemMonitor:14072 [interfaces.py:start():187] Started disk monitoring
+2023-03-13 15:40:38,190 INFO    SystemMonitor:14072 [interfaces.py:start():187] Started memory monitoring
+2023-03-13 15:40:38,191 INFO    SystemMonitor:14072 [interfaces.py:start():187] Started network monitoring
+2023-03-13 15:40:38,192 DEBUG   HandlerThread:14072 [system_info.py:_probe_git():180] Probing git
+2023-03-13 15:40:38,217 DEBUG   HandlerThread:14072 [system_info.py:_probe_git():188] Probing git done
+2023-03-13 15:40:38,218 DEBUG   HandlerThread:14072 [system_info.py:probe():240] Probing system done
+2023-03-13 15:40:38,218 DEBUG   HandlerThread:14072 [system_monitor.py:probe():213] {'os': 'macOS-10.16-x86_64-i386-64bit', 'python': '3.9.13', 'heartbeatAt': '2023-03-13T07:40:38.189768', 'startedAt': '2023-03-13T07:40:37.271842', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/main.py', 'codePath': 'main.py', 'git': {'remote': 'https://github.com/emadeldeen24/AdaTime.git', 'commit': '739a2e39bc49d1cddcb2fd4dac7300c7686deed4'}, 'email': None, 'root': '/Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime', 'host': 'IHP-SPL-7KHXVR2-ragab.local', 'username': 'ragab', 'executable': '/Users/ragab/opt/anaconda3/envs/pytorch2/bin/python', 'cpu_count': 10, 'cpu_count_logical': 10, 'cpu_freq': {'current': 2400, 'min': 2400, 'max': 2400}, 'cpu_freq_per_core': [{'current': 2400, 'min': 2400, 'max': 2400}], 'disk': {'total': 926.3517189025879, 'used': 90.11666488647461}, 'memory': {'total': 32.0}}
+2023-03-13 15:40:38,218 INFO    HandlerThread:14072 [system_monitor.py:probe():214] Finished collecting system info
+2023-03-13 15:40:38,218 INFO    HandlerThread:14072 [system_monitor.py:probe():217] Publishing system info
+2023-03-13 15:40:38,218 DEBUG   HandlerThread:14072 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-03-13 15:40:38,219 DEBUG   HandlerThread:14072 [system_info.py:_save_pip():67] Saving pip packages done
+2023-03-13 15:40:38,219 DEBUG   HandlerThread:14072 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-03-13 15:40:39,019 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_created():278] file/dir created: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/requirements.txt
+2023-03-13 15:40:39,019 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_created():278] file/dir created: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-summary.json
+2023-03-13 15:40:39,019 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_created():278] file/dir created: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/conda-environment.yaml
+2023-03-13 15:40:44,382 DEBUG   HandlerThread:14072 [system_info.py:_save_conda():86] Saving conda packages done
+2023-03-13 15:40:44,383 INFO    HandlerThread:14072 [system_monitor.py:probe():219] Finished publishing system info
+2023-03-13 15:40:44,385 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: status_report
+2023-03-13 15:40:44,385 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-13 15:40:44,386 DEBUG   SenderThread:14072 [sender.py:send():336] send: files
+2023-03-13 15:40:44,386 INFO    SenderThread:14072 [sender.py:_save_file():1332] saving file wandb-metadata.json with policy now
+2023-03-13 15:40:44,390 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: stop_status
+2023-03-13 15:40:44,390 DEBUG   SenderThread:14072 [sender.py:send():336] send: telemetry
+2023-03-13 15:40:44,392 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: stop_status
+2023-03-13 15:40:44,664 DEBUG   SenderThread:14072 [sender.py:send():336] send: exit
+2023-03-13 15:40:44,664 INFO    SenderThread:14072 [sender.py:send_exit():559] handling exit code: 1
+2023-03-13 15:40:44,665 INFO    SenderThread:14072 [sender.py:send_exit():561] handling runtime: 6
+2023-03-13 15:40:44,665 INFO    SenderThread:14072 [sender.py:_save_file():1332] saving file wandb-summary.json with policy end
+2023-03-13 15:40:44,665 INFO    SenderThread:14072 [sender.py:send_exit():567] send defer
+2023-03-13 15:40:44,665 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,666 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 0
+2023-03-13 15:40:44,666 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,666 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 0
+2023-03-13 15:40:44,666 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 1
+2023-03-13 15:40:44,666 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,666 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 1
+2023-03-13 15:40:44,666 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,666 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 1
+2023-03-13 15:40:44,667 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 2
+2023-03-13 15:40:44,667 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,667 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 2
+2023-03-13 15:40:44,667 INFO    HandlerThread:14072 [system_monitor.py:finish():193] Stopping system monitor
+2023-03-13 15:40:44,686 DEBUG   SystemMonitor:14072 [system_monitor.py:_start():161] Starting system metrics aggregation loop
+2023-03-13 15:40:44,686 DEBUG   SystemMonitor:14072 [system_monitor.py:_start():168] Finished system metrics aggregation loop
+2023-03-13 15:40:44,686 DEBUG   SystemMonitor:14072 [system_monitor.py:_start():172] Publishing last batch of metrics
+2023-03-13 15:40:44,688 INFO    HandlerThread:14072 [interfaces.py:finish():199] Joined cpu monitor
+2023-03-13 15:40:44,688 INFO    HandlerThread:14072 [interfaces.py:finish():199] Joined disk monitor
+2023-03-13 15:40:44,688 INFO    HandlerThread:14072 [interfaces.py:finish():199] Joined memory monitor
+2023-03-13 15:40:44,688 INFO    HandlerThread:14072 [interfaces.py:finish():199] Joined network monitor
+2023-03-13 15:40:44,689 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,689 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 2
+2023-03-13 15:40:44,689 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 3
+2023-03-13 15:40:44,690 DEBUG   SenderThread:14072 [sender.py:send():336] send: stats
+2023-03-13 15:40:44,690 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,691 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 3
+2023-03-13 15:40:44,691 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,691 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 3
+2023-03-13 15:40:44,691 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 4
+2023-03-13 15:40:44,691 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,691 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 4
+2023-03-13 15:40:44,691 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,691 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 4
+2023-03-13 15:40:44,691 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 5
+2023-03-13 15:40:44,691 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,691 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 5
+2023-03-13 15:40:44,691 DEBUG   SenderThread:14072 [sender.py:send():336] send: summary
+2023-03-13 15:40:44,692 INFO    SenderThread:14072 [sender.py:_save_file():1332] saving file wandb-summary.json with policy end
+2023-03-13 15:40:44,692 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,692 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 5
+2023-03-13 15:40:44,692 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 6
+2023-03-13 15:40:44,692 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,692 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 6
+2023-03-13 15:40:44,692 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:44,692 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 6
+2023-03-13 15:40:44,695 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: status_report
+2023-03-13 15:40:44,999 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 7
+2023-03-13 15:40:44,999 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:44,999 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 7
+2023-03-13 15:40:45,000 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:45,000 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 7
+2023-03-13 15:40:45,038 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_modified():295] file/dir modified: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/conda-environment.yaml
+2023-03-13 15:40:45,038 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_modified():295] file/dir modified: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-summary.json
+2023-03-13 15:40:45,038 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_modified():295] file/dir modified: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/config.yaml
+2023-03-13 15:40:45,038 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_created():278] file/dir created: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-metadata.json
+2023-03-13 15:40:45,038 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_created():278] file/dir created: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/output.log
+2023-03-13 15:40:45,440 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: poll_exit
+2023-03-13 15:40:46,378 INFO    wandb-upload_0:14072 [upload_job.py:push():138] Uploaded file /var/folders/54/cp0pnfkx2y36kdvf4srvhpc80000gp/T/tmp5w1xj7xawandb/kgpfcovd-wandb-metadata.json
+2023-03-13 15:40:47,043 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_modified():295] file/dir modified: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/output.log
+2023-03-13 15:40:48,672 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 8
+2023-03-13 15:40:48,672 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: poll_exit
+2023-03-13 15:40:48,672 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:48,672 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 8
+2023-03-13 15:40:48,672 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:48,673 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 8
+2023-03-13 15:40:48,677 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 9
+2023-03-13 15:40:48,677 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:48,677 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 9
+2023-03-13 15:40:48,677 DEBUG   SenderThread:14072 [sender.py:send():336] send: artifact
+2023-03-13 15:40:49,048 INFO    Thread-13 :14072 [dir_watcher.py:_on_file_modified():295] file/dir modified: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/output.log
+2023-03-13 15:40:50,450 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-13 15:40:51,821 INFO    wandb-upload_1:14072 [upload_job.py:push():96] Uploaded file /Users/ragab/Library/Application Support/wandb/artifacts/staging/tmp5pnef1js
+2023-03-13 15:40:51,929 INFO    wandb-upload_0:14072 [upload_job.py:push():96] Uploaded file /Users/ragab/Library/Application Support/wandb/artifacts/staging/tmp81iggewv
+2023-03-13 15:40:55,471 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-13 15:40:55,817 INFO    SenderThread:14072 [sender.py:send_artifact():1428] sent artifact job-https___github.com_emadeldeen24_AdaTime.git_main.py - {'id': 'QXJ0aWZhY3Q6Mzk1NjAxMjkz', 'digest': 'ae65e47406aad7af311449c874fa5bb4', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjU2ODcyNzgz', 'latestArtifact': None}, 'version': 'latest'}
+2023-03-13 15:40:55,818 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:55,818 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 9
+2023-03-13 15:40:55,818 INFO    SenderThread:14072 [dir_watcher.py:finish():365] shutting down directory watcher
+2023-03-13 15:40:55,818 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: status_report
+2023-03-13 15:40:56,083 INFO    SenderThread:14072 [dir_watcher.py:finish():395] scan: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files
+2023-03-13 15:40:56,084 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/requirements.txt requirements.txt
+2023-03-13 15:40:56,084 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/output.log output.log
+2023-03-13 15:40:56,084 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/config.yaml config.yaml
+2023-03-13 15:40:56,090 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-summary.json wandb-summary.json
+2023-03-13 15:40:56,090 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/conda-environment.yaml conda-environment.yaml
+2023-03-13 15:40:56,092 INFO    SenderThread:14072 [dir_watcher.py:finish():409] scan save: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-metadata.json wandb-metadata.json
+2023-03-13 15:40:56,093 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 10
+2023-03-13 15:40:56,095 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:56,096 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 10
+2023-03-13 15:40:56,098 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:56,098 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 10
+2023-03-13 15:40:56,098 INFO    SenderThread:14072 [file_pusher.py:finish():164] shutting down file pusher
+2023-03-13 15:40:56,912 INFO    wandb-upload_3:14072 [upload_job.py:push():138] Uploaded file /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/wandb-summary.json
+2023-03-13 15:40:57,706 INFO    wandb-upload_0:14072 [upload_job.py:push():138] Uploaded file /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/output.log
+2023-03-13 15:40:57,723 INFO    wandb-upload_1:14072 [upload_job.py:push():138] Uploaded file /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/requirements.txt
+2023-03-13 15:40:57,799 INFO    wandb-upload_4:14072 [upload_job.py:push():138] Uploaded file /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/conda-environment.yaml
+2023-03-13 15:40:57,912 INFO    wandb-upload_2:14072 [upload_job.py:push():138] Uploaded file /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/files/config.yaml
+2023-03-13 15:40:58,118 INFO    Thread-12 :14072 [sender.py:transition_state():587] send defer: 11
+2023-03-13 15:40:58,119 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:58,119 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 11
+2023-03-13 15:40:58,120 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:58,120 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 11
+2023-03-13 15:40:58,120 INFO    SenderThread:14072 [file_pusher.py:join():169] waiting for file pusher
+2023-03-13 15:40:58,120 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 12
+2023-03-13 15:40:58,120 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:58,120 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 12
+2023-03-13 15:40:58,121 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:58,121 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 12
+2023-03-13 15:40:58,397 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 13
+2023-03-13 15:40:58,397 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:58,398 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 13
+2023-03-13 15:40:58,398 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:58,398 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 13
+2023-03-13 15:40:58,398 INFO    SenderThread:14072 [sender.py:transition_state():587] send defer: 14
+2023-03-13 15:40:58,399 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: defer
+2023-03-13 15:40:58,399 DEBUG   SenderThread:14072 [sender.py:send():336] send: final
+2023-03-13 15:40:58,399 DEBUG   SenderThread:14072 [sender.py:send():336] send: footer
+2023-03-13 15:40:58,399 INFO    HandlerThread:14072 [handler.py:handle_request_defer():170] handle defer: 14
+2023-03-13 15:40:58,400 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: defer
+2023-03-13 15:40:58,400 INFO    SenderThread:14072 [sender.py:send_request_defer():583] handle sender defer: 14
+2023-03-13 15:40:58,401 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: poll_exit
+2023-03-13 15:40:58,401 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: poll_exit
+2023-03-13 15:40:58,402 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: server_info
+2023-03-13 15:40:58,402 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: get_summary
+2023-03-13 15:40:58,402 DEBUG   SenderThread:14072 [sender.py:send_request():363] send_request: server_info
+2023-03-13 15:40:58,404 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: sampled_history
+2023-03-13 15:40:58,865 INFO    MainThread:14072 [wandb_run.py:_footer_history_summary_info():3429] rendering history
+2023-03-13 15:40:58,865 INFO    MainThread:14072 [wandb_run.py:_footer_history_summary_info():3461] rendering summary
+2023-03-13 15:40:58,865 INFO    MainThread:14072 [wandb_run.py:_footer_sync_info():3387] logging synced files
+2023-03-13 15:40:58,866 DEBUG   HandlerThread:14072 [handler.py:handle_request():144] handle_request: shutdown
+2023-03-13 15:40:58,866 INFO    HandlerThread:14072 [handler.py:finish():842] shutting down handler
+2023-03-13 15:40:59,408 INFO    WriterThread:14072 [datastore.py:close():298] close: /Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/wandb/run-20230313_154037-xyng5sbj/run-xyng5sbj.wandb
+2023-03-13 15:40:59,870 INFO    SenderThread:14072 [sender.py:finish():1504] shutting down sender
+2023-03-13 15:40:59,870 INFO    SenderThread:14072 [file_pusher.py:finish():164] shutting down file pusher
+2023-03-13 15:40:59,870 INFO    SenderThread:14072 [file_pusher.py:join():169] waiting for file pusher

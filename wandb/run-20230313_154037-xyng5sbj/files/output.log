@@ -1,0 +1,15 @@
+=============================================
+Dataset: HAR
+Method:  Deep_Coral
+=============================================
+Source: 2 ---> Target: 11
+Run ID: 0
+=============================================
+Traceback (most recent call last):
+  File "/Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/main.py", line 50, in <module>
+    trainer.train()
+  File "/Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/trainer.py", line 115, in train
+    self.load_data(src_id, trg_id)
+  File "/Users/ragab/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/Scientist I Work/Developed Methods/AdaTime/trainer.py", line 213, in load_data
+    self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
+TypeError: few_shot_data_generator() takes 1 positional argument but 2 were given
