@@ -176,29 +176,20 @@ class cross_domain_trainer(object):
 
                 # append results
                 table_results.add_data(scenario, run_id, acc, f1, auroc)
-
-
-                # self.calc_results_per_run()
-
-
         # logging metrics
-        # self.calc_overall_results()
-        
-
-
         average_metrics = [np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]]
         std_metrics = [np.std(table_results.get_column(metric)) for metric in table_results.columns[2:]]
 
-        # avg_acc, avg_f1, avg_auroc = list(average_metrics.values())
+        # add avg and std values
         table_results.add_data('mean', '-', *average_metrics)
         table_results.add_data('std', '-', *std_metrics)
 
-        # {metric: np.mean(value) for (metric, value) in self.metrics.items()}
-        # wandb.log(average_metrics)
+        # log table to wabdb
+        wandb.log({'results': table_results})
+
         wandb.log({'hparams': wandb.Table(
             dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),
             allow_mixed_types=True)})
-        wandb.log({'results': table_results})
         
         run.finish()
 
@@ -211,7 +202,6 @@ class cross_domain_trainer(object):
 
         total_loss, preds_list, labels_list = [], [], []
         
-
         with torch.no_grad():
             for data, labels in self.trg_test_dl:
                 data = data.float().to(self.device)
@@ -245,10 +235,8 @@ class cross_domain_trainer(object):
                                                              self.hparams)
         self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,
                                                              self.hparams)
-        # self.few_shot_dl_2 = few_shot_data_generator(self.trg_test_dl, 2)
         self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
-        # self.few_shot_dl_10 = few_shot_data_generator(self.trg_test_dl, 10)
-        # self.few_shot_dl_15 = few_shot_data_generator(self.trg_test_dl, 15)
+
 
 
     def create_save_dir(self):
@@ -273,10 +261,7 @@ class cross_domain_trainer(object):
             run_metrics = {'accuracy': self.acc,
                            'f1_score': self.f1,
                            'src_risk': self.src_risk,
-                           # 'few_shot_trg_risk_2': self.few_shot_trg_risk_2,
                            'few_shot_trg_risk_5': self.few_shot_trg_risk_5,
-                           # 'few_shot_trg_risk_10': self.few_shot_trg_risk_10,
-                           # 'few_shot_trg_risk_15': self.few_shot_trg_risk_15,
                            'trg_risk': self.trg_risk,
                            'dev_risk': self.dev_risk}
 
