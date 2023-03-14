@@ -11,9 +11,8 @@ from configs.hparams import get_hparams_class
 
 from configs.sweep_params import sweep_alg_hparams
 from utils import fix_randomness, copy_Files, starting_logs, save_checkpoint, _calc_metrics
-from utils import calc_dev_risk, calculate_risk
 import warnings
-
+from sklearn.metrics import f1_score
 import sklearn.exceptions
 
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
@@ -107,9 +106,9 @@ class cross_domain_trainer(object):
 
         # metrics
         num_classes = self.dataset_configs.num_classes
-        self.ACC = Accuracy(task="multiclass", num_classes=num_classes).to(self.device)
-        self.F1 = F1Score(task="multiclass", num_classes=num_classes).to(self.device)
-        self.AUROC = AUROC(task="multiclass", num_classes=num_classes).to(self.device)
+        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)#.to(self.device)
+        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")#.to(self.device)
+        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)#.to(self.device)
 
         for i in scenarios:
             src_id = i[0]
@@ -250,8 +249,12 @@ class cross_domain_trainer(object):
 
         # calculate metrics
         acc = self.ACC(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
+        # f1_torch
         f1 = self.F1(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
         auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
+        # f1_sk learn
+        # f1 = f1_score(self.full_preds.argmax(dim=1).cpu().numpy(), self.full_labels.cpu().numpy(), average='macro')
+
 
         risks = src_risk, fst_risk, trg_risk
         metrics = acc, f1, auroc

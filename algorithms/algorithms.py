@@ -85,7 +85,10 @@ class Deep_Coral(Algorithm):
         )
         self.hparams = hparams
 
-    def update(self, src_x, src_y, trg_x):
+    def update(self, src_loader, trg_loader, avg_meter, logger):
+
+
+
         src_feat = self.feature_extractor(src_x)
         src_pred = self.classifier(src_feat)
 
@@ -101,6 +104,16 @@ class Deep_Coral(Algorithm):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        losses = {'Total_loss': loss.item(), 'Target_loss': coral_loss.item()}
+
+        for key, val in losses.items():
+            avg_meter[key].update(val, 32)
+
+    logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+    for key, val in avg_meter.items():
+        logger.debug(f'{key}\t: {val.avg:2.4f}')
+    logger.debug(f'-------------------------------------')
 
         return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
 
