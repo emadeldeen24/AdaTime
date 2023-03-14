@@ -25,14 +25,14 @@ parser.add_argument('--backbone',               default='CNN',                  
 
 # ========= Experiment settings ===============
 parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
-parser.add_argument('--device',                 default= "mps",                   type=str, help='cpu or cuda')
+parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
 
 # ======== sweep settings =====================
 parser.add_argument('--is_sweep',               default=False,                      type=bool, help='singe run or sweep')
-parser.add_argument('--num_sweeps',             default=30,                         type=str, help='Number of sweep runs')
+parser.add_argument('--num_sweeps',             default=1,                         type=str, help='Number of sweep runs')
 
 # We run sweeps using wandb plateform, so next parameters are for wandb.
-parser.add_argument('--sweep_project_wandb',    default='TEST_SOMETHING',       type=str, help='Project name in Wandb')
+parser.add_argument('--sweep_project_wandb',    default='ADATIME_refactor',       type=str, help='Project name in Wandb')
 parser.add_argument('--wandb_entity',           type=str, help='Entity name in Wandb (can be left blank if there is a default entity)')
 parser.add_argument('--hp_search_strategy',     default="random",               type=str, help='The way of selecting hyper-parameters (random-grid-bayes). in wandb see:https://docs.wandb.ai/guides/sweeps/configuration')
 parser.add_argument('--metric_to_minimize',     default="src_risk",             type=str, help='select one of: (src_risk - trg_risk - few_shot_trg_risk - dev_risk)')

@@ -97,7 +97,7 @@ class cross_domain_trainer(object):
 
         scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
-        # self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
+        self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
 
         for i in scenarios:
             src_id = i[0]
