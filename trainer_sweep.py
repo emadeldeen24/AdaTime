@@ -133,10 +133,9 @@ class cross_domain_trainer(object):
                 # Average meters
                 loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
 
-                joint_loaders = zip(self.src_train_dl, self.trg_train_dl)
                 len_dataloader = min(len(self.src_train_dl), len(self.trg_train_dl))
 
-                self.algorithm.update(joint_loaders, loss_avg_meters, self.logger)
+                self.algorithm.update(self.src_train_dl, self.trg_train_dl, loss_avg_meters, self.logger)
 
                 # # training..
                 # for epoch in range(1, self.hparams["num_epochs"] + 1):

@@ -6,6 +6,7 @@ from models.models import classifier, ReverseLayerF, Discriminator, RandomLayer,
     codats_classifier, AdvSKM_Disc, CNN_ATTN
 from models.loss import MMD_loss, CORAL, ConditionalEntropyLoss, VAT, LMMD_loss, HoMM_loss, NTXentLoss, SupConLoss
 from utils import EMA
+from torch.optim.lr_scheduler import StepLR
 
 
 def get_algorithm_class(algorithm_name):
@@ -83,15 +84,18 @@ class Deep_Coral(Algorithm):
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
-        self.hparams = hparams
 
-    def update(self, joint_loaders, avg_meter, logger):
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        self.hparams = hparams
+        self.device = device
+
+    def update(self, src_loader, trg_loader , avg_meter, logger):
 
         for epoch in range(1, self.hparams["num_epochs"] + 1):
+            joint_loader = enumerate(zip(src_loader, trg_loader))
 
-            for step, ((src_x, src_y), (trg_x, _)) in enumerate(joint_loaders):
-                src_x, src_y, trg_x = src_x.float().to(self.device), src_y.long().to(self.device), \
-                                      trg_x.float().to(self.device)
+            for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+                src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
 
                 src_feat = self.feature_extractor(src_x)
                 src_pred = self.classifier(src_feat)
@@ -114,10 +118,12 @@ class Deep_Coral(Algorithm):
                 for key, val in losses.items():
                     avg_meter[key].update(val, 32)
 
-        logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
-        for key, val in avg_meter.items():
-            logger.debug(f'{key}\t: {val.avg:2.4f}')
-        logger.debug(f'-------------------------------------')
+            self.lr_scheduler.step()
+
+            logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+            for key, val in avg_meter.items():
+                logger.debug(f'{key}\t: {val.avg:2.4f}')
+            logger.debug(f'-------------------------------------')
 
         # return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
 
