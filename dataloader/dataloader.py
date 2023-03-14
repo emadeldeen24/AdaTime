@@ -5,63 +5,87 @@ from torchvision import transforms
 
 from sklearn.model_selection import train_test_split
 
-import os
+import os, sys
 import numpy as np
 import random
 
 
 class Load_Dataset(Dataset):
-    def __init__(self, dataset, normalize):
-        super(Load_Dataset, self).__init__()
+    def __init__(self, dataset, dataset_configs):
+        super().__init__()
 
-        X_train = dataset["samples"]
-        y_train = dataset["labels"]
+        # Load samples
+        x_data = dataset["samples"]
 
-        if len(X_train.shape) < 3:
-            X_train = X_train.unsqueeze(2)
+        # Check samples dimensions
+        if len(x_data.shape) == 2:
+            x_data = x_data.unsqueeze(1)
+        elif len(x_data.shape) == 3 and x_data.shape[1] != dataset_configs.input_channels:
+            x_data = x_data.transpose(1, 2)
 
-        if isinstance(X_train, np.ndarray):
-            X_train = torch.from_numpy(X_train)
-            y_train = torch.from_numpy(y_train).long()
+        # Convert to torch tensor
+        if isinstance(x_data, np.ndarray):
+            x_data = torch.from_numpy(x_data)
 
-        if X_train.shape.index(min(X_train.shape[1], X_train.shape[2])) != 1:  # make sure the Channels in second dim
-            X_train = X_train.permute(0, 2, 1)
+        # Load labels
+        y_data = dataset.get("labels")
+        if y_data is not None and isinstance(y_data, np.ndarray):
+            y_data = torch.from_numpy(y_data)
 
-        self.x_data = X_train
-        self.y_data = y_train
+        # Normalize data
+        if dataset_configs.normalize:
+            data_mean = torch.mean(x_data, dim=(0, 2), keepdim=True)
+            data_std = torch.std(x_data, dim=(0, 2), keepdim=True)
+            self.transform = transforms.Normalize(mean=data_mean, std=data_std)
 
-        self.num_channels = X_train.shape[1]
-
-        if normalize:
-            # Assume datashape: num_samples, num_channels, seq_length
-            data_mean = torch.FloatTensor(self.num_channels).fill_(0).tolist()  # assume min= number of channels
-            data_std = torch.FloatTensor(self.num_channels).fill_(1).tolist()  # assume min= number of channels
-            data_transform = transforms.Normalize(mean=data_mean, std=data_std)
-            self.transform = data_transform
-        else:
-            self.transform = None
-
-        self.len = X_train.shape[0]
+        self.x_data = x_data.float()
+        self.y_data = y_data.long() if y_data is not None else None
+        self.len = x_data.shape[0]
 
     def __getitem__(self, index):
-        if self.transform is not None:
-            output = self.transform(self.x_data[index].view(self.num_channels, -1, 1))
-            self.x_data[index] = output.view(self.x_data[index].shape)
-
-        return self.x_data[index].float(), self.y_data[index].long()
+        x = self.x_data[index]
+        if self.transform:
+            x = self.transform(x)
+        y = self.y_data[index] if self.y_data is not None else None
+        return x, y
 
     def __len__(self):
         return self.len
 
 
-def data_generator(data_path, domain_id, dataset_configs, hparams):
+def data_generator(data_path, domain_id, dataset_configs, hparams, dtype):
+    # loading dataset file from path
+    dataset_file = torch.load(os.path.join(data_path, f"{dtype}_{domain_id}.pt"))
+
+    # Loading datasets
+    dataset = Load_Dataset(dataset_file, dataset_configs)
+
+    if dtype == "test":  # you don't need to shuffle or drop last batch while testing
+        shuffle  = False
+        drop_last = False
+    else:
+        shuffle = dataset_configs.shuffle
+        drop_last = dataset_configs.drop_last
+
+    # Dataloaders
+    data_loader = torch.utils.data.DataLoader(dataset=dataset, 
+                                              batch_size=hparams["batch_size"],
+                                              shuffle=shuffle, 
+                                              drop_last=drop_last, 
+                                              num_workers=0)
+
+    return data_loader
+
+
+
+def data_generator_old(data_path, domain_id, dataset_configs, hparams):
     # loading path
     train_dataset = torch.load(os.path.join(data_path, "train_" + domain_id + ".pt"))
     test_dataset = torch.load(os.path.join(data_path, "test_" + domain_id + ".pt"))
 
     # Loading datasets
-    train_dataset = Load_Dataset(train_dataset, dataset_configs.normalize)
-    test_dataset = Load_Dataset(test_dataset, dataset_configs.normalize)
+    train_dataset = Load_Dataset(train_dataset, dataset_configs)
+    test_dataset = Load_Dataset(test_dataset, dataset_configs)
 
     # Dataloaders
     batch_size = hparams["batch_size"]
@@ -73,67 +97,28 @@ def data_generator(data_path, domain_id, dataset_configs, hparams):
     return train_loader, test_loader
 
 
-def few_shot_data_generator(data_loader, num_samples=5):
+
+def few_shot_data_generator(data_loader, dataset_configs, num_samples=5):
     x_data = data_loader.dataset.x_data
     y_data = data_loader.dataset.y_data
-    if not isinstance(y_data, (np.ndarray)):
-        y_data = y_data.numpy()
 
     NUM_SAMPLES_PER_CLASS = num_samples
-    NUM_CLASSES = len(np.unique(y_data))
+    NUM_CLASSES = len(torch.unique(y_data))
 
-    samples_count_dict = {id: 0 for id in range(NUM_CLASSES)}
+    counts = [y_data.eq(i).sum().item() for i in range(NUM_CLASSES)]
+    samples_count_dict = {i: min(counts[i], NUM_SAMPLES_PER_CLASS) for i in range(NUM_CLASSES)}
 
-    # if the min number of samples in one class is less than NUM_SAMPLES_PER_CLASS
-    y_list = y_data.tolist()
-    counts = [y_list.count(i) for i in range(NUM_CLASSES)]
+    samples_ids = {i: torch.where(y_data == i)[0] for i in range(NUM_CLASSES)}
+    selected_ids = {i: torch.randperm(samples_ids[i].size(0))[:samples_count_dict[i]] for i in range(NUM_CLASSES)}
 
-    for i in samples_count_dict:
-        if counts[i] < NUM_SAMPLES_PER_CLASS:
-            samples_count_dict[i] = counts[i]
-        else:
-            samples_count_dict[i] = NUM_SAMPLES_PER_CLASS
-
-    # if min(counts) < NUM_SAMPLES_PER_CLASS:
-    #     NUM_SAMPLES_PER_CLASS = min(counts)
-
-    samples_ids = {}
-    for i in range(NUM_CLASSES):
-        samples_ids[i] = [np.where(y_data == i)[0]][0]
-
-    selected_ids = {}
-    for i in range(NUM_CLASSES):
-        selected_ids[i] = random.sample(list(samples_ids[i]), samples_count_dict[i])
-
-    # select the samples according to the selected random ids
-    y = torch.from_numpy(y_data)
-    selected_x = x_data[list(selected_ids[0])]
-    selected_y = y[list(selected_ids[0])]
-
-    for i in range(1, NUM_CLASSES):
-        selected_x = torch.cat((selected_x, x_data[list(selected_ids[i])]), dim=0)
-        selected_y = torch.cat((selected_y, y[list(selected_ids[i])]), dim=0)
+    selected_x = torch.cat([x_data[samples_ids[i][selected_ids[i]]] for i in range(NUM_CLASSES)], dim=0)
+    selected_y = torch.cat([y_data[samples_ids[i][selected_ids[i]]] for i in range(NUM_CLASSES)], dim=0)
 
     few_shot_dataset = {"samples": selected_x, "labels": selected_y}
-    # Loading datasets
-    few_shot_dataset = Load_Dataset(few_shot_dataset, None)
+    few_shot_dataset = Load_Dataset(few_shot_dataset, dataset_configs)
 
-    # Dataloaders
     few_shot_loader = torch.utils.data.DataLoader(dataset=few_shot_dataset, batch_size=len(few_shot_dataset),
                                                   shuffle=False, drop_last=False, num_workers=0)
+
     return few_shot_loader
 
-
-def generator_percentage_of_data(data_loader):
-    x_data = data_loader.dataset.x_data
-    y_data = data_loader.dataset.y_data
-
-    X_train, X_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.1, random_state=0)
-
-    few_shot_dataset = {"samples": X_val, "labels": y_val}
-    # Loading datasets
-    few_shot_dataset = Load_Dataset(few_shot_dataset, None)
-
-    few_shot_loader = torch.utils.data.DataLoader(dataset=few_shot_dataset, batch_size=32,
-                                                  shuffle=True, drop_last=True, num_workers=0)
-    return few_shot_loader

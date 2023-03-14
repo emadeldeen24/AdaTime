@@ -1,7 +1,7 @@
 import os
 import argparse
 import warnings
-from trainer_sweep import cross_domain_trainer
+from trainer import cross_domain_trainer
 import sklearn.exceptions
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 
@@ -17,7 +17,7 @@ parser.add_argument('--run_description',        default='test',                 
 parser.add_argument('--da_method',              default='Deep_Coral',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 
 # ========= Select the DATASET ==============
-parser.add_argument('--data_path',              default=r'./data',                  type=str, help='Path containing datase2t')
+parser.add_argument('--data_path',              default=r'F:\ADATIME_data',                  type=str, help='Path containing datase2t')
 parser.add_argument('--dataset',                default='HAR',                      type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
 
 # ========= Select the BACKBONE ==============
@@ -25,7 +25,7 @@ parser.add_argument('--backbone',               default='CNN',                  
 
 # ========= Experiment settings ===============
 parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
-parser.add_argument('--device',                 default= "mps",                   type=str, help='cpu or cuda')
+parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
 
 # ======== sweep settings =====================
 parser.add_argument('--is_sweep',               default=False,                      type=bool, help='singe run or sweep')

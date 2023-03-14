@@ -1,0 +1,116 @@
+2023-03-14 14:02:10,330 INFO    StreamThr :28272 [internal.py:wandb_internal():87] W&B internal server running at pid: 28272, started at: 2023-03-14 14:02:10.329567
+2023-03-14 14:02:10,334 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status
+2023-03-14 14:02:10,337 INFO    WriterThread:28272 [datastore.py:open_for_write():85] open: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\run-03tyzd1g.wandb
+2023-03-14 14:02:10,343 DEBUG   SenderThread:28272 [sender.py:send():334] send: header
+2023-03-14 14:02:10,417 DEBUG   SenderThread:28272 [sender.py:send():334] send: run
+2023-03-14 14:02:11,204 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: check_version
+2023-03-14 14:02:11,205 INFO    SenderThread:28272 [dir_watcher.py:__init__():216] watching files in: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files
+2023-03-14 14:02:11,206 INFO    SenderThread:28272 [sender.py:_start_run_threads():1065] run started: 03tyzd1g with start time 1678773730.33455
+2023-03-14 14:02:11,206 DEBUG   SenderThread:28272 [sender.py:send_request():361] send_request: summary_record
+2023-03-14 14:02:11,207 INFO    SenderThread:28272 [sender.py:_save_file():1319] saving file wandb-summary.json with policy end
+2023-03-14 14:02:11,207 DEBUG   SenderThread:28272 [sender.py:send_request():361] send_request: check_version
+2023-03-14 14:02:11,286 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: run_start
+2023-03-14 14:02:11,305 DEBUG   HandlerThread:28272 [system_info.py:__init__():31] System info init
+2023-03-14 14:02:11,305 DEBUG   HandlerThread:28272 [system_info.py:__init__():46] System info init done
+2023-03-14 14:02:11,305 INFO    HandlerThread:28272 [system_monitor.py:start():151] Starting system monitor
+2023-03-14 14:02:11,306 INFO    HandlerThread:28272 [system_monitor.py:probe():172] Collecting system info
+2023-03-14 14:02:11,306 INFO    SystemMonitor:28272 [system_monitor.py:_start():116] Starting system asset monitoring threads
+2023-03-14 14:02:11,308 INFO    SystemMonitor:28272 [interfaces.py:start():168] Started cpu
+2023-03-14 14:02:11,313 INFO    SystemMonitor:28272 [interfaces.py:start():168] Started disk
+2023-03-14 14:02:11,314 INFO    SystemMonitor:28272 [interfaces.py:start():168] Started gpu
+2023-03-14 14:02:11,314 INFO    SystemMonitor:28272 [interfaces.py:start():168] Started memory
+2023-03-14 14:02:11,315 INFO    SystemMonitor:28272 [interfaces.py:start():168] Started network
+2023-03-14 14:02:11,326 DEBUG   HandlerThread:28272 [system_info.py:probe():195] Probing system
+2023-03-14 14:02:11,328 DEBUG   HandlerThread:28272 [system_info.py:_probe_git():180] Probing git
+2023-03-14 14:02:11,481 DEBUG   HandlerThread:28272 [system_info.py:_probe_git():188] Probing git done
+2023-03-14 14:02:11,481 DEBUG   HandlerThread:28272 [system_info.py:probe():241] Probing system done
+2023-03-14 14:02:11,482 DEBUG   HandlerThread:28272 [system_monitor.py:probe():181] {'os': 'Windows-10-10.0.19044-SP0', 'python': '3.9.13', 'heartbeatAt': '2023-03-14T06:02:11.327252', 'startedAt': '2023-03-14T06:02:10.313620', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': 'f:\\AdaTime\\main.py', 'codePath': 'main.py', 'git': {'remote': 'https://github.com/emadeldeen24/AdaTime.git', 'commit': '3e7010e185d2e95a17b10b33d11ac03675fb2578'}, 'email': 'mohamedr002@e.ntu.edu.sg', 'root': 'F:/AdaTime', 'host': 'I2R-SPD-0000008', 'username': 'MohamedRMA', 'executable': 'C:\\Users\\MohamedRMA\\anaconda3\\python.exe', 'cpu_count': 16, 'cpu_count_logical': 24, 'cpu_freq': {'current': 3200.0, 'min': 0.0, 'max': 3200.0}, 'cpu_freq_per_core': [{'current': 3200.0, 'min': 0.0, 'max': 3200.0}], 'disk': {'total': 3726.0058555603027, 'used': 3.5114212036132812}, 'gpu': 'NVIDIA GeForce RTX 3090', 'gpu_count': 1, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}], 'memory': {'total': 127.78543472290039}}
+2023-03-14 14:02:11,482 INFO    HandlerThread:28272 [system_monitor.py:probe():182] Finished collecting system info
+2023-03-14 14:02:11,482 INFO    HandlerThread:28272 [system_monitor.py:probe():185] Publishing system info
+2023-03-14 14:02:11,482 DEBUG   HandlerThread:28272 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-03-14 14:02:11,483 DEBUG   HandlerThread:28272 [system_info.py:_save_pip():67] Saving pip packages done
+2023-03-14 14:02:11,484 DEBUG   HandlerThread:28272 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-03-14 14:02:11,486 ERROR   HandlerThread:28272 [system_info.py:_save_conda():85] Error saving conda packages: [WinError 2] The system cannot find the file specified
+Traceback (most recent call last):
+  File "C:\Users\MohamedRMA\anaconda3\lib\site-packages\wandb\sdk\internal\system\system_info.py", line 81, in _save_conda
+    subprocess.call(
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 349, in call
+    with Popen(*popenargs, **kwargs) as p:
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 951, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 1420, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+  File "c:\Users\MohamedRMA\.vscode\extensions\ms-python.python-2023.4.1\pythonFiles\lib\python\debugpy\_vendored\pydevd\_pydev_bundle\pydev_monkey.py", line 901, in new_CreateProcess
+    return getattr(_subprocess, original_name)(app_name, cmd_line, *args)
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+2023-03-14 14:02:11,492 DEBUG   HandlerThread:28272 [system_info.py:_save_conda():86] Saving conda packages done
+2023-03-14 14:02:11,493 INFO    HandlerThread:28272 [system_monitor.py:probe():187] Finished publishing system info
+2023-03-14 14:02:11,540 DEBUG   SenderThread:28272 [sender.py:send():334] send: files
+2023-03-14 14:02:11,540 INFO    SenderThread:28272 [sender.py:_save_file():1319] saving file wandb-metadata.json with policy now
+2023-03-14 14:02:11,555 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: stop_status
+2023-03-14 14:02:11,555 DEBUG   SenderThread:28272 [sender.py:send_request():361] send_request: stop_status
+2023-03-14 14:02:11,846 DEBUG   SenderThread:28272 [sender.py:send():334] send: telemetry
+2023-03-14 14:02:12,216 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\requirements.txt
+2023-03-14 14:02:12,216 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\wandb-metadata.json
+2023-03-14 14:02:12,216 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\output.log
+2023-03-14 14:02:12,217 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\wandb-summary.json
+2023-03-14 14:02:12,217 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\conda-environment.yaml
+2023-03-14 14:02:12,543 INFO    Thread-29 :28272 [upload_job.py:push():143] Uploaded file C:\Users\MOHAME~1\AppData\Local\Temp\tmpk_84gj56wandb\x4knovsw-wandb-metadata.json
+2023-03-14 14:02:14,232 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_modified():292] file/dir modified: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\output.log
+2023-03-14 14:02:15,888 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:20,918 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:25,973 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:26,557 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:26,558 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:31,017 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:31,617 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:36,070 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:36,673 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:41,134 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:41,531 INFO    Thread-24 :28272 [dir_watcher.py:_on_file_modified():292] file/dir modified: F:\AdaTime\wandb\run-20230314_140210-03tyzd1g\files\config.yaml
+2023-03-14 14:02:41,720 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:46,531 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:46,771 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:51,582 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:51,813 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:02:56,629 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:02:56,871 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:01,676 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:01,915 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:06,730 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:06,968 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:11,328 DEBUG   SystemMonitor:28272 [system_monitor.py:_start():130] Starting system metrics aggregation loop
+2023-03-14 14:03:11,330 DEBUG   SenderThread:28272 [sender.py:send():334] send: stats
+2023-03-14 14:03:12,024 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:12,339 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:17,078 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:17,392 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:22,140 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:22,456 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:27,196 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:27,510 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:32,248 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:32,561 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:37,302 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:37,617 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:41,338 DEBUG   SenderThread:28272 [sender.py:send():334] send: stats
+2023-03-14 14:03:42,361 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:43,355 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:47,420 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:48,423 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:52,459 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:53,450 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:03:57,491 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:03:58,480 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:02,538 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:03,513 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:07,592 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:08,573 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:11,349 DEBUG   SenderThread:28272 [sender.py:send():334] send: stats
+2023-03-14 14:04:12,637 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:12,637 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:14,375 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:17,696 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:19,390 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:22,745 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: keepalive
+2023-03-14 14:04:24,450 DEBUG   HandlerThread:28272 [handler.py:handle_request():144] handle_request: status_report
