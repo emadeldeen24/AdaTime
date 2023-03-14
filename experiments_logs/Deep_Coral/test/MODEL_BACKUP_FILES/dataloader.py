@@ -97,59 +97,8 @@ def data_generator_old(data_path, domain_id, dataset_configs, hparams):
     return train_loader, test_loader
 
 
+
 def few_shot_data_generator(data_loader, dataset_configs, num_samples=5):
-    x_data = data_loader.dataset.x_data
-    y_data = data_loader.dataset.y_data
-    # if not isinstance(y_data, (np.ndarray)):
-    #     y_data = y_data.numpy()
-    y_data = np.asarray(data_loader.dataset.y_data)
-
-    NUM_SAMPLES_PER_CLASS = num_samples
-    NUM_CLASSES = len(np.unique(y_data))
-
-    samples_count_dict = {id: 0 for id in range(NUM_CLASSES)}
-
-    # if the min number of samples in one class is less than NUM_SAMPLES_PER_CLASS
-    y_list = y_data.tolist()
-    counts = [y_list.count(i) for i in range(NUM_CLASSES)]
-
-    for i in samples_count_dict:
-        if counts[i] < NUM_SAMPLES_PER_CLASS:
-            samples_count_dict[i] = counts[i]
-        else:
-            samples_count_dict[i] = NUM_SAMPLES_PER_CLASS
-
-    # if min(counts) < NUM_SAMPLES_PER_CLASS:
-    #     NUM_SAMPLES_PER_CLASS = min(counts)
-
-    samples_ids = {}
-    for i in range(NUM_CLASSES):
-        samples_ids[i] = [np.where(y_data == i)[0]][0]
-
-    selected_ids = {}
-    for i in range(NUM_CLASSES):
-        selected_ids[i] = random.sample(list(samples_ids[i]), samples_count_dict[i])
-
-    # select the samples according to the selected random ids
-    y = torch.from_numpy(y_data)
-    selected_x = x_data[list(selected_ids[0])]
-    selected_y = y[list(selected_ids[0])]
-
-    for i in range(1, NUM_CLASSES):
-        selected_x = torch.cat((selected_x, x_data[list(selected_ids[i])]), dim=0)
-        selected_y = torch.cat((selected_y, y[list(selected_ids[i])]), dim=0)
-
-    few_shot_dataset = {"samples": selected_x, "labels": selected_y}
-    # Loading datasets
-    few_shot_dataset = Load_Dataset(few_shot_dataset, dataset_configs)
-
-    # Dataloaders
-    few_shot_loader = torch.utils.data.DataLoader(dataset=few_shot_dataset, batch_size=len(few_shot_dataset),
-                                                  shuffle=False, drop_last=False, num_workers=0)
-    return few_shot_loader
-
-
-def few_shot_data_generator2(data_loader, dataset_configs, num_samples=5):
     x_data = data_loader.dataset.x_data
     y_data = data_loader.dataset.y_data
 
@@ -173,17 +122,3 @@ def few_shot_data_generator2(data_loader, dataset_configs, num_samples=5):
 
     return few_shot_loader
 
-
-def generator_percentage_of_data(data_loader):
-    x_data = data_loader.dataset.x_data
-    y_data = data_loader.dataset.y_data
-
-    X_train, X_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.1, random_state=0)
-
-    few_shot_dataset = {"samples": X_val, "labels": y_val}
-    # Loading datasets
-    few_shot_dataset = Load_Dataset(few_shot_dataset, dataset_configs)
-
-    few_shot_loader = torch.utils.data.DataLoader(dataset=few_shot_dataset, batch_size=32,
-                                                  shuffle=True, drop_last=True, num_workers=0)
-    return few_shot_loader

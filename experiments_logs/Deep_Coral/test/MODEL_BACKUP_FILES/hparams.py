@@ -11,7 +11,7 @@ class HAR():
     def __init__(self):
         super(HAR, self).__init__()
         self.train_params = {
-                'num_epochs': 3,
+                'num_epochs': 40,
                 'batch_size': 32,
                 'weight_decay': 1e-4,
 
@@ -20,7 +20,7 @@ class HAR():
             'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
             'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
             'DANN':         {'learning_rate': 1e-2, 'src_cls_loss_wt': 9.74, 'domain_loss_wt': 5.43},
-            'Deep_Coral':   {'learning_rate': 5e-3, 'src_cls_loss_wt': 8.67, 'coral_wt': 0.44},
+            'Deep_Coral':   {'learning_rate': 5e-4, 'src_cls_loss_wt':0.1013, 'coral_wt':4.23},
             'DDC':          {'learning_rate': 5e-3, 'src_cls_loss_wt': 6.24, 'domain_loss_wt': 6.36},
             'HoMM':         {'learning_rate': 1e-3, 'src_cls_loss_wt': 2.15, 'domain_loss_wt': 9.13},
             'CoDATS':       {'learning_rate': 1e-3, 'src_cls_loss_wt': 6.21, 'domain_loss_wt': 1.72},
