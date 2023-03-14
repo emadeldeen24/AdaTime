@@ -13,16 +13,17 @@ import random
 class Load_Dataset(Dataset):
     def __init__(self, dataset, dataset_configs):
         super().__init__()
+        self.num_channels = dataset_configs.input_channels
 
         # Load samples
         x_data = dataset["samples"]
-
+        
         # Check samples dimensions.
         # The dimension of the data is expected to be (N, C, L)
         # where N is the #samples, C: #channels, and L is the sequence length
         if len(x_data.shape) == 2:
             x_data = x_data.unsqueeze(1)
-        elif len(x_data.shape) == 3 and x_data.shape[1] != dataset_configs.input_channels:
+        elif len(x_data.shape) == 3 and x_data.shape[1] != self.num_channels:
             x_data = x_data.transpose(1, 2)
 
         # Convert to torch tensor
@@ -43,6 +44,7 @@ class Load_Dataset(Dataset):
         self.x_data = x_data.float()
         self.y_data = y_data.long() if y_data is not None else None
         self.len = x_data.shape[0]
+         
 
     def __getitem__(self, index):
         x = self.x_data[index]
