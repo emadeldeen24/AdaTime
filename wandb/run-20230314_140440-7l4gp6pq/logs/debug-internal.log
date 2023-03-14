@@ -1,0 +1,62 @@
+2023-03-14 14:04:41,746 INFO    StreamThr :5720 [internal.py:wandb_internal():87] W&B internal server running at pid: 5720, started at: 2023-03-14 14:04:41.745544
+2023-03-14 14:04:41,750 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: status
+2023-03-14 14:04:41,751 INFO    WriterThread:5720 [datastore.py:open_for_write():85] open: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\run-7l4gp6pq.wandb
+2023-03-14 14:04:41,759 DEBUG   SenderThread:5720 [sender.py:send():334] send: header
+2023-03-14 14:04:41,962 DEBUG   SenderThread:5720 [sender.py:send():334] send: run
+2023-03-14 14:04:42,681 INFO    SenderThread:5720 [dir_watcher.py:__init__():216] watching files in: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files
+2023-03-14 14:04:42,681 INFO    SenderThread:5720 [sender.py:_start_run_threads():1065] run started: 7l4gp6pq with start time 1678773881.748534
+2023-03-14 14:04:42,681 DEBUG   SenderThread:5720 [sender.py:send_request():361] send_request: summary_record
+2023-03-14 14:04:42,681 INFO    SenderThread:5720 [sender.py:_save_file():1319] saving file wandb-summary.json with policy end
+2023-03-14 14:04:42,689 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: check_version
+2023-03-14 14:04:42,689 DEBUG   SenderThread:5720 [sender.py:send_request():361] send_request: check_version
+2023-03-14 14:04:42,760 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: run_start
+2023-03-14 14:04:42,781 DEBUG   HandlerThread:5720 [system_info.py:__init__():31] System info init
+2023-03-14 14:04:42,781 DEBUG   HandlerThread:5720 [system_info.py:__init__():46] System info init done
+2023-03-14 14:04:42,781 INFO    HandlerThread:5720 [system_monitor.py:start():151] Starting system monitor
+2023-03-14 14:04:42,782 INFO    HandlerThread:5720 [system_monitor.py:probe():172] Collecting system info
+2023-03-14 14:04:42,782 INFO    SystemMonitor:5720 [system_monitor.py:_start():116] Starting system asset monitoring threads
+2023-03-14 14:04:42,783 INFO    SystemMonitor:5720 [interfaces.py:start():168] Started cpu
+2023-03-14 14:04:42,788 INFO    SystemMonitor:5720 [interfaces.py:start():168] Started disk
+2023-03-14 14:04:42,788 INFO    SystemMonitor:5720 [interfaces.py:start():168] Started gpu
+2023-03-14 14:04:42,789 INFO    SystemMonitor:5720 [interfaces.py:start():168] Started memory
+2023-03-14 14:04:42,790 INFO    SystemMonitor:5720 [interfaces.py:start():168] Started network
+2023-03-14 14:04:42,803 DEBUG   HandlerThread:5720 [system_info.py:probe():195] Probing system
+2023-03-14 14:04:42,805 DEBUG   HandlerThread:5720 [system_info.py:_probe_git():180] Probing git
+2023-03-14 14:04:42,962 DEBUG   HandlerThread:5720 [system_info.py:_probe_git():188] Probing git done
+2023-03-14 14:04:42,963 DEBUG   HandlerThread:5720 [system_info.py:probe():241] Probing system done
+2023-03-14 14:04:42,963 DEBUG   HandlerThread:5720 [system_monitor.py:probe():181] {'os': 'Windows-10-10.0.19044-SP0', 'python': '3.9.13', 'heartbeatAt': '2023-03-14T06:04:42.803192', 'startedAt': '2023-03-14T06:04:40.712693', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': 'f:\\AdaTime\\main.py', 'codePath': 'main.py', 'git': {'remote': 'https://github.com/emadeldeen24/AdaTime.git', 'commit': '3e7010e185d2e95a17b10b33d11ac03675fb2578'}, 'email': 'mohamedr002@e.ntu.edu.sg', 'root': 'F:/AdaTime', 'host': 'I2R-SPD-0000008', 'username': 'MohamedRMA', 'executable': 'C:\\Users\\MohamedRMA\\anaconda3\\python.exe', 'cpu_count': 16, 'cpu_count_logical': 24, 'cpu_freq': {'current': 3200.0, 'min': 0.0, 'max': 3200.0}, 'cpu_freq_per_core': [{'current': 3200.0, 'min': 0.0, 'max': 3200.0}], 'disk': {'total': 3726.0058555603027, 'used': 3.5114593505859375}, 'gpu': 'NVIDIA GeForce RTX 3090', 'gpu_count': 1, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 3090', 'memory_total': 25769803776}], 'memory': {'total': 127.78543472290039}}
+2023-03-14 14:04:42,963 INFO    HandlerThread:5720 [system_monitor.py:probe():182] Finished collecting system info
+2023-03-14 14:04:42,963 INFO    HandlerThread:5720 [system_monitor.py:probe():185] Publishing system info
+2023-03-14 14:04:42,963 DEBUG   HandlerThread:5720 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-03-14 14:04:42,965 DEBUG   HandlerThread:5720 [system_info.py:_save_pip():67] Saving pip packages done
+2023-03-14 14:04:42,965 DEBUG   HandlerThread:5720 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-03-14 14:04:42,968 ERROR   HandlerThread:5720 [system_info.py:_save_conda():85] Error saving conda packages: [WinError 2] The system cannot find the file specified
+Traceback (most recent call last):
+  File "C:\Users\MohamedRMA\anaconda3\lib\site-packages\wandb\sdk\internal\system\system_info.py", line 81, in _save_conda
+    subprocess.call(
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 349, in call
+    with Popen(*popenargs, **kwargs) as p:
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 951, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Users\MohamedRMA\anaconda3\lib\subprocess.py", line 1420, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+  File "c:\Users\MohamedRMA\.vscode\extensions\ms-python.python-2023.4.1\pythonFiles\lib\python\debugpy\_vendored\pydevd\_pydev_bundle\pydev_monkey.py", line 901, in new_CreateProcess
+    return getattr(_subprocess, original_name)(app_name, cmd_line, *args)
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+2023-03-14 14:04:42,973 DEBUG   HandlerThread:5720 [system_info.py:_save_conda():86] Saving conda packages done
+2023-03-14 14:04:42,975 INFO    HandlerThread:5720 [system_monitor.py:probe():187] Finished publishing system info
+2023-03-14 14:04:42,988 DEBUG   SenderThread:5720 [sender.py:send():334] send: files
+2023-03-14 14:04:42,988 INFO    SenderThread:5720 [sender.py:_save_file():1319] saving file wandb-metadata.json with policy now
+2023-03-14 14:04:43,003 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: stop_status
+2023-03-14 14:04:43,003 DEBUG   SenderThread:5720 [sender.py:send_request():361] send_request: stop_status
+2023-03-14 14:04:43,270 DEBUG   SenderThread:5720 [sender.py:send():334] send: telemetry
+2023-03-14 14:04:43,697 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\conda-environment.yaml
+2023-03-14 14:04:43,697 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\output.log
+2023-03-14 14:04:43,697 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\requirements.txt
+2023-03-14 14:04:43,698 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\wandb-metadata.json
+2023-03-14 14:04:43,698 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_created():275] file/dir created: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\wandb-summary.json
+2023-03-14 14:04:44,643 INFO    Thread-29 :5720 [upload_job.py:push():143] Uploaded file C:\Users\MOHAME~1\AppData\Local\Temp\tmpsvr11cc2wandb\sr26r2p7-wandb-metadata.json
+2023-03-14 14:04:45,712 INFO    Thread-24 :5720 [dir_watcher.py:_on_file_modified():292] file/dir modified: F:\AdaTime\wandb\run-20230314_140440-7l4gp6pq\files\output.log
+2023-03-14 14:04:47,326 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:52,376 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: status_report
+2023-03-14 14:04:57,426 DEBUG   HandlerThread:5720 [handler.py:handle_request():144] handle_request: status_report
