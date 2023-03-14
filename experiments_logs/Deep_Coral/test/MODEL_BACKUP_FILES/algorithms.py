@@ -85,24 +85,41 @@ class Deep_Coral(Algorithm):
         )
         self.hparams = hparams
 
-    def update(self, src_x, src_y, trg_x):
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+    def update(self, joint_loaders, avg_meter, logger):
 
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+        for epoch in range(1, self.hparams["num_epochs"] + 1):
 
-        trg_feat = self.feature_extractor(trg_x)
+            for step, ((src_x, src_y), (trg_x, _)) in enumerate(joint_loaders):
+                src_x, src_y, trg_x = src_x.float().to(self.device), src_y.long().to(self.device), \
+                                      trg_x.float().to(self.device)
 
-        coral_loss = self.coral(src_feat, trg_feat)
+                src_feat = self.feature_extractor(src_x)
+                src_pred = self.classifier(src_feat)
 
-        loss = self.hparams["coral_wt"] * coral_loss + \
-               self.hparams["src_cls_loss_wt"] * src_cls_loss
+                src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+                trg_feat = self.feature_extractor(trg_x)
 
-        return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+                coral_loss = self.coral(src_feat, trg_feat)
+
+                loss = self.hparams["coral_wt"] * coral_loss + \
+                       self.hparams["src_cls_loss_wt"] * src_cls_loss
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                losses = {'Total_loss': loss.item(), 'Src_cls_loss': src_cls_loss.item(), 'coral_loss': coral_loss.item()}
+
+                for key, val in losses.items():
+                    avg_meter[key].update(val, 32)
+
+        logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+        for key, val in avg_meter.items():
+            logger.debug(f'{key}\t: {val.avg:2.4f}')
+        logger.debug(f'-------------------------------------')
+
+        # return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
 
 
 class MMDA(Algorithm):

@@ -106,13 +106,11 @@ class cross_domain_trainer(object):
 
         # metrics
         num_classes = self.dataset_configs.num_classes
-        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)#.to(self.device)
-        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")#.to(self.device)
-        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)#.to(self.device)
+        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)  # .to(self.device)
+        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")  # .to(self.device)
+        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)  # .to(self.device)
 
-        for i in scenarios:
-            src_id = i[0]
-            trg_id = i[1]
+        for src_id, trg_id in scenarios:
 
             for run_id in range(self.num_runs):  # specify number of consecutive runs
                 # fixing random seed
@@ -129,37 +127,37 @@ class cross_domain_trainer(object):
                 algorithm_class = get_algorithm_class(self.da_method)
                 backbone_fe = get_backbone_class(self.backbone)
 
-                algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
-                algorithm.to(self.device)
+                self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
+                self.algorithm.to(self.device)
 
                 # Average meters
                 loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
 
-                # training..
-                for epoch in range(1, self.hparams["num_epochs"] + 1):
-                    joint_loaders = enumerate(zip(self.src_train_dl, self.trg_train_dl))
-                    len_dataloader = min(len(self.src_train_dl), len(self.trg_train_dl))
-                    algorithm.train()
+                joint_loaders = zip(self.src_train_dl, self.trg_train_dl)
+                len_dataloader = min(len(self.src_train_dl), len(self.trg_train_dl))
 
-                    for step, ((src_x, src_y), (trg_x, _)) in joint_loaders:
-                        src_x, src_y, trg_x = src_x.float().to(self.device), src_y.long().to(self.device), \
-                                              trg_x.float().to(self.device)
+                self.algorithm.update(joint_loaders, loss_avg_meters, self.logger)
 
-                        if self.da_method == "DANN" or self.da_method == "CoDATS":
-                            losses = algorithm.update(src_x, src_y, trg_x, step, epoch, len_dataloader)
-                        else:
-                            losses = algorithm.update(src_x, src_y, trg_x)
-
-                        for key, val in losses.items():
-                            loss_avg_meters[key].update(val, src_x.size(0))
-
-                    # logging
-                    self.logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
-                    for key, val in loss_avg_meters.items():
-                        self.logger.debug(f'{key}\t: {val.avg:2.4f}')
-                    self.logger.debug(f'-------------------------------------')
-
-                self.algorithm = algorithm
+                # # training..
+                # for epoch in range(1, self.hparams["num_epochs"] + 1):
+                #     algorithm.train()
+                #     for step, ((src_x, src_y), (trg_x, _)) in enumerate(joint_loaders):
+                #         src_x, src_y, trg_x = src_x.float().to(self.device), src_y.long().to(self.device), \
+                #                               trg_x.float().to(self.device)
+                #
+                #         if self.da_method == "DANN" or self.da_method == "CoDATS":
+                #             losses = algorithm.update(src_x, src_y, trg_x, step, epoch, len_dataloader)
+                #         else:
+                #             losses = algorithm.update(src_x, src_y, trg_x)
+                #
+                #         for key, val in losses.items():
+                #             loss_avg_meters[key].update(val, src_x.size(0))
+                #
+                #     # logging
+                #     self.logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+                #     for key, val in loss_avg_meters.items():
+                #         self.logger.debug(f'{key}\t: {val.avg:2.4f}')
+                #     self.logger.debug(f'-------------------------------------')
 
                 # calculate risks and metrics
                 risks, metrics = self.calculate_metrics_risks()
@@ -185,7 +183,9 @@ class cross_domain_trainer(object):
 
         # log wabdb
         wandb.log({'results': table_results})
-        wandb.log({'hparams': wandb.Table( dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),  allow_mixed_types=True)})
+        wandb.log({'hparams': wandb.Table(
+            dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),
+            allow_mixed_types=True)})
         wandb.log(overall_risks)
         wandb.log(overall_metrics)
 
@@ -228,9 +228,14 @@ class cross_domain_trainer(object):
         return dataset_class(), hparams_class()
 
     def load_data(self, src_id, trg_id):
-        self.src_train_dl, self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs,self.hparams)
-        self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,  self.hparams)
-        self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
+        self.src_train_dl = data_generator(self.data_path, src_id, self.dataset_configs, self.hparams, "train")
+        self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs, self.hparams, "test")
+
+        self.trg_train_dl = data_generator(self.data_path, trg_id, self.dataset_configs, self.hparams, "train")
+        self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs, self.hparams, "test")
+
+        self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, self.dataset_configs,
+                                                     5)  # set 5 to other value if you want other k-shot FST
 
     def create_save_dir(self):
         if not os.path.exists(self.save_dir):
@@ -254,7 +259,6 @@ class cross_domain_trainer(object):
         auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
         # f1_sk learn
         # f1 = f1_score(self.full_preds.argmax(dim=1).cpu().numpy(), self.full_labels.cpu().numpy(), average='macro')
-
 
         risks = src_risk, fst_risk, trg_risk
         metrics = acc, f1, auroc

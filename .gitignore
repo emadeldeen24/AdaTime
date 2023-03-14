@@ -2,3 +2,5 @@
 wandb/
 experiments_logs/
 data/
+main.py
+*.pyc
