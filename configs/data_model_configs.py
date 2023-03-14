@@ -7,8 +7,7 @@ def get_dataset_class(dataset_name):
 class HAR():
     def __init__(self):
         super(HAR, self)
-        self.scenarios = [("2", "11"), ("6", "23")]
-        # , ("7", "13"), ("9", "18"), ("12", "16"), ("18", "27"), ("20", "5"), ("24", "8"), ("28", "27"), ("30", "20")]
+        self.scenarios = [("2", "11"), ("6", "23"), ("7", "13"), ("9", "18"), ("12", "16"), ("18", "27"), ("20", "5"), ("24", "8"), ("28", "27"), ("30", "20")]
         self.class_names = ['walk', 'upstairs', 'downstairs', 'sit', 'stand', 'lie']
         self.sequence_len = 128
         self.shuffle = True

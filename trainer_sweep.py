@@ -15,12 +15,14 @@ from utils import calc_dev_risk, calculate_risk
 import warnings
 
 import sklearn.exceptions
+
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 
 import collections
 from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
 from utils import AverageMeter
+
 
 # torch.backends.cudnn.benchmark = True  # to fasten TCN
 # os.environ['PYTORCH_MPS_FORCE_DISABLE'] = '1'
@@ -29,6 +31,7 @@ class cross_domain_trainer(object):
     """
    This class contain the main training functions for our AdAtime
     """
+
     def __init__(self, args):
         self.da_method = args.da_method  # Selected  DA Method
         self.dataset = args.dataset  # Selected  Dataset
@@ -84,33 +87,29 @@ class cross_domain_trainer(object):
         # wandb.agent('8wkaibgr', self.train, count=25,project='HHAR_SA_Resnet', entity= 'iclr_rebuttal' )
 
     def train(self):
-        if self.is_sweep:
-            run = wandb.init(config=self.default_hparams)
-            run_name = f"sweep_{self.dataset}"
-        else:
-            run_name = f"{self.run_description}"
-            run = wandb.init(config=self.default_hparams, mode="online", name=run_name)
+
+        run = wandb.init(config=self.default_hparams)
+        run_name = f"sweep_{self.dataset}"
 
         self.hparams = wandb.config
         # Logging
         self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
         os.makedirs(self.exp_log_dir, exist_ok=True)
-        copy_Files(self.exp_log_dir)  # save a copy of training files:
 
         scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
-        # results_table = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "src_risk", "few_shot_trg_risk_5", "trg_risk", "dev_risk"])
+        # table with metrics
         table_results = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "auroc"], allow_mixed_types=True)
+
+        # table with risks
+        table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],
+                                  allow_mixed_types=True)
 
         # metrics
         num_classes = self.dataset_configs.num_classes
         self.ACC = Accuracy(task="multiclass", num_classes=num_classes).to(self.device)
         self.F1 = F1Score(task="multiclass", num_classes=num_classes).to(self.device)
         self.AUROC = AUROC(task="multiclass", num_classes=num_classes).to(self.device)
-
-        self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
-
-
 
         for i in scenarios:
             src_id = i[0]
@@ -162,21 +161,18 @@ class cross_domain_trainer(object):
                     self.logger.debug(f'-------------------------------------')
 
                 self.algorithm = algorithm
-                save_checkpoint(self.home_path, self.algorithm, scenarios, self.dataset_configs,
-                                self.scenario_log_dir, self.hparams)
-                
-                # evaluate models
-                self.evaluate()
 
-                # calculate metrics
-                scenario = f"{i[0]}_to_{i[1]}"
-                acc = self.ACC(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
-                f1 = self.F1(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
-                auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
+                # calculate risks and metrics
+                risks, metrics = self.calculate_metrics_risks()
+
+                # calculate metrics on target test labeled data
+                scenario = f"{src_id}_to_{trg_id}"
 
                 # append results
-                table_results.add_data(scenario, run_id, acc, f1, auroc)
-        # logging metrics
+                table_results.add_data(scenario, run_id, *metrics)
+                table_risks.add_data(scenario, run_id, *risks)
+
+        # logging average metrics and logs
         average_metrics = [np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]]
         std_metrics = [np.std(table_results.get_column(metric)) for metric in table_results.columns[2:]]
 
@@ -184,16 +180,19 @@ class cross_domain_trainer(object):
         table_results.add_data('mean', '-', *average_metrics)
         table_results.add_data('std', '-', *std_metrics)
 
-        # log table to wabdb
-        wandb.log({'results': table_results})
+        # calculate overall
+        overall_risks = {risk: np.mean(table_risks.get_column(risk)) for risk in table_risks.columns[2:]}
+        overall_metrics = {metric: np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]}
 
-        wandb.log({'hparams': wandb.Table(
-            dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),
-            allow_mixed_types=True)})
-        
+        # log wabdb
+        wandb.log({'results': table_results})
+        wandb.log({'hparams': wandb.Table( dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),  allow_mixed_types=True)})
+        wandb.log(overall_risks)
+        wandb.log(overall_metrics)
+
         run.finish()
 
-    def evaluate(self):
+    def evaluate(self, test_loader):
         feature_extractor = self.algorithm.feature_extractor.to(self.device)
         classifier = self.algorithm.classifier.to(self.device)
 
@@ -201,9 +200,9 @@ class cross_domain_trainer(object):
         classifier.eval()
 
         total_loss, preds_list, labels_list = [], [], []
-        
+
         with torch.no_grad():
-            for data, labels in self.trg_test_dl:
+            for data, labels in test_loader:
                 data = data.float().to(self.device)
                 labels = labels.view((-1)).long().to(self.device)
 
@@ -214,14 +213,13 @@ class cross_domain_trainer(object):
                 # compute loss
                 loss = F.cross_entropy(predictions, labels)
                 total_loss.append(loss.item())
-                pred = predictions.detach() #.argmax(dim=1)  # get the index of the max log-probability
+                pred = predictions.detach()  # .argmax(dim=1)  # get the index of the max log-probability
 
                 # append predictions and labels
                 preds_list.append(pred)
                 labels_list.append(labels)
 
-
-        self.trg_loss = torch.tensor(total_loss).mean()  # average loss
+        self.loss = torch.tensor(total_loss).mean()  # average loss
         self.full_preds = torch.cat((preds_list))
         self.full_labels = torch.cat((labels_list))
 
@@ -231,88 +229,31 @@ class cross_domain_trainer(object):
         return dataset_class(), hparams_class()
 
     def load_data(self, src_id, trg_id):
-        self.src_train_dl, self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs,
-                                                             self.hparams)
-        self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,
-                                                             self.hparams)
+        self.src_train_dl, self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs,self.hparams)
+        self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,  self.hparams)
         self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
-
-
 
     def create_save_dir(self):
         if not os.path.exists(self.save_dir):
             os.mkdir(self.save_dir)
 
-    def calc_results_per_run(self):
-        '''
-        Calculates the acc, f1 and risk values for each cross-domain scenario
-        '''
+    def calculate_metrics_risks(self):
+        # calculation based source test data
+        self.evaluate(self.src_test_dl)
+        src_risk = self.loss
+        # calculation based few_shot test data
+        self.evaluate(self.few_shot_dl_5)
+        fst_risk = self.loss
+        # calculation based target test data
+        self.evaluate(self.trg_test_dl)
+        trg_risk = self.loss
 
-        self.acc, self.f1 = _calc_metrics(self.trg_pred_labels, self.trg_true_labels, self.scenario_log_dir,
-                                          self.home_path,
-                                          self.dataset_configs.class_names)
-        if self.is_sweep:
-            self.src_risk = calculate_risk(self.algorithm, self.src_test_dl, self.device)
-            self.trg_risk = calculate_risk(self.algorithm, self.trg_test_dl, self.device)
-            self.few_shot_trg_risk_5 = calculate_risk(self.algorithm, self.few_shot_dl_5, self.device)
-            self.dev_risk = calc_dev_risk(self.algorithm, self.src_train_dl, self.trg_train_dl, self.src_test_dl,
-                                          self.dataset_configs, self.device)
+        # calculate metrics
+        acc = self.ACC(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
+        f1 = self.F1(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
+        auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
 
-            run_metrics = {'accuracy': self.acc,
-                           'f1_score': self.f1,
-                           'src_risk': self.src_risk,
-                           'few_shot_trg_risk_5': self.few_shot_trg_risk_5,
-                           'trg_risk': self.trg_risk,
-                           'dev_risk': self.dev_risk}
+        risks = src_risk, fst_risk, trg_risk
+        metrics = acc, f1, auroc
 
-            df = pd.DataFrame(columns=["acc", "f1", "src_risk", "few_shot_trg_risk_5", "trg_risk", "dev_risk"])
-            df.loc[0] = [self.acc, self.f1, self.src_risk, self.few_shot_trg_risk_5, self.trg_risk, self.dev_risk]
-        else:
-            run_metrics = {'accuracy': self.acc, 'f1_score': self.f1}
-            df = pd.DataFrame(columns=["acc", "f1"])
-            df.loc[0] = [self.acc, self.f1]
-
-        for (key, val) in run_metrics.items(): self.metrics[key].append(val)
-
-        scores_save_path = os.path.join(self.home_path, self.scenario_log_dir, "scores.xlsx")
-        df.to_excel(scores_save_path, index=False)
-        self.results_df = df
-
-    def calc_overall_results(self):
-        exp = self.exp_log_dir
-        if self.is_sweep:
-            results = pd.DataFrame(
-                columns=["acc", "f1", "src_risk", "few_shot_trg_risk_5", "trg_risk", "dev_risk"])
-        else:
-            results = pd.DataFrame(columns=["scenario", "acc", "f1"])
-
-        scenarios_list = os.listdir(exp)
-        scenarios_list = [i for i in scenarios_list if "_to_" in i]
-        scenarios_list.sort()
-        
-        unique_scenarios_names = [f'{i}_to_{j}' for i, j in self.dataset_configs.scenarios]
-
-        for scenario in scenarios_list:
-            scenario_dir = os.path.join(exp, scenario)
-            scores = pd.read_excel(os.path.join(scenario_dir, 'scores.xlsx'))
-            scores.insert(0, 'scenario', '_'.join(scenario.split('_')[:-2]))
-            results = pd.concat([results, scores])
-
-        avg_results = results.groupby('scenario').mean()
-        std_results = results.groupby('scenario').std()
-        
-        avg_results.insert(0, "scenario", list(unique_scenarios_names) , True)
-        std_results.insert(0, "scenario", list(unique_scenarios_names), True)
-
-        allover_avg = pd.DataFrame([avg_results.mean()], index=["mean"], columns=avg_results.columns)
-        avg_results = pd.concat([avg_results, allover_avg])
-        allover_std = pd.DataFrame([std_results.mean()], index=["mean"], columns=std_results.columns)
-        std_results = pd.concat([std_results, allover_std])
-
-        report_save_path_avg = os.path.join(exp, f"Average_results.xlsx")
-        report_save_path_std = os.path.join(exp, f"std_results.xlsx")
-
-        self.averages_results_df = avg_results
-        self.std_results_df = std_results
-        avg_results.to_excel(report_save_path_avg)
-        std_results.to_excel(report_save_path_std)
+        return risks, metrics
