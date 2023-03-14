@@ -99,9 +99,7 @@ class cross_domain_trainer(object):
 
         self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
 
-        for i in scenarios:
-            src_id = i[0]
-            trg_id = i[1]
+        for src_id, trg_id in scenarios:
 
             for run_id in range(self.num_runs):  # specify number of consecutive runs
                 # fixing random seed

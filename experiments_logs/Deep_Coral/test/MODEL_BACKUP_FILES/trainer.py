@@ -5,7 +5,7 @@ import os
 import wandb
 import pandas as pd
 import numpy as np
-from dataloader.dataloader import data_generator, few_shot_data_generator, few_shot_data_generator2
+from dataloader.dataloader import data_generator, few_shot_data_generator
 from configs.data_model_configs import get_dataset_class
 from configs.hparams import get_hparams_class
 
@@ -97,11 +97,9 @@ class cross_domain_trainer(object):
 
         scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
-        # self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
+        self.metrics = {'accuracy': [], 'f1_score': [], 'src_risk': [], 'few_shot_trg_risk_5': [], 'trg_risk': [], 'dev_risk': []}
 
-        for i in scenarios:
-            src_id = i[0]
-            trg_id = i[1]
+        for src_id, trg_id in scenarios:
 
             for run_id in range(self.num_runs):  # specify number of consecutive runs
                 # fixing random seed
@@ -212,8 +210,6 @@ class cross_domain_trainer(object):
         self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs, self.hparams, "test")
         
         self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, self.dataset_configs,  5)  # set 5 to other value if you want other k-shot FST
-        self.few_shot_dl_52 = few_shot_data_generator2(self.trg_test_dl, self.dataset_configs, 5)  # set 5 to other value if you want other k-shot FST
-        print("test")
 
 
     def create_save_dir(self):
