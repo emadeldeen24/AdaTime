@@ -1,0 +1,116 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="73" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="76">
+            <item index="0" class="java.lang.String" itemvalue="testpath" />
+            <item index="1" class="java.lang.String" itemvalue="defusedxml" />
+            <item index="2" class="java.lang.String" itemvalue="nbclient" />
+            <item index="3" class="java.lang.String" itemvalue="jupyter-server" />
+            <item index="4" class="java.lang.String" itemvalue="PyNaCl" />
+            <item index="5" class="java.lang.String" itemvalue="Pygments" />
+            <item index="6" class="java.lang.String" itemvalue="pyzmq" />
+            <item index="7" class="java.lang.String" itemvalue="bleach" />
+            <item index="8" class="java.lang.String" itemvalue="blist" />
+            <item index="9" class="java.lang.String" itemvalue="certifi" />
+            <item index="10" class="java.lang.String" itemvalue="anyio" />
+            <item index="11" class="java.lang.String" itemvalue="arff" />
+            <item index="12" class="java.lang.String" itemvalue="sympy" />
+            <item index="13" class="java.lang.String" itemvalue="notebook" />
+            <item index="14" class="java.lang.String" itemvalue="path.py" />
+            <item index="15" class="java.lang.String" itemvalue="terminado" />
+            <item index="16" class="java.lang.String" itemvalue="nbclassic" />
+            <item index="17" class="java.lang.String" itemvalue="h5py" />
+            <item index="18" class="java.lang.String" itemvalue="cryptography" />
+            <item index="19" class="java.lang.String" itemvalue="kiwisolver" />
+            <item index="20" class="java.lang.String" itemvalue="typing-extensions" />
+            <item index="21" class="java.lang.String" itemvalue="jupyter-client" />
+            <item index="22" class="java.lang.String" itemvalue="ipykernel" />
+            <item index="23" class="java.lang.String" itemvalue="attrs" />
+            <item index="24" class="java.lang.String" itemvalue="bcrypt" />
+            <item index="25" class="java.lang.String" itemvalue="backports-abc" />
+            <item index="26" class="java.lang.String" itemvalue="jedi" />
+            <item index="27" class="java.lang.String" itemvalue="jupyter-packaging" />
+            <item index="28" class="java.lang.String" itemvalue="paramiko" />
+            <item index="29" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="30" class="java.lang.String" itemvalue="mock" />
+            <item index="31" class="java.lang.String" itemvalue="paycheck" />
+            <item index="32" class="java.lang.String" itemvalue="pbr" />
+            <item index="33" class="java.lang.String" itemvalue="decorator" />
+            <item index="34" class="java.lang.String" itemvalue="jupyter-core" />
+            <item index="35" class="java.lang.String" itemvalue="matplotlib-inline" />
+            <item index="36" class="java.lang.String" itemvalue="netifaces" />
+            <item index="37" class="java.lang.String" itemvalue="Pillow-SIMD" />
+            <item index="38" class="java.lang.String" itemvalue="ptyprocess" />
+            <item index="39" class="java.lang.String" itemvalue="more-itertools" />
+            <item index="40" class="java.lang.String" itemvalue="cffi" />
+            <item index="41" class="java.lang.String" itemvalue="funcsigs" />
+            <item index="42" class="java.lang.String" itemvalue="numpy" />
+            <item index="43" class="java.lang.String" itemvalue="requests" />
+            <item index="44" class="java.lang.String" itemvalue="importlib-metadata" />
+            <item index="45" class="java.lang.String" itemvalue="Jinja2" />
+            <item index="46" class="java.lang.String" itemvalue="sniffio" />
+            <item index="47" class="java.lang.String" itemvalue="zipp" />
+            <item index="48" class="java.lang.String" itemvalue="nest-asyncio" />
+            <item index="49" class="java.lang.String" itemvalue="netaddr" />
+            <item index="50" class="java.lang.String" itemvalue="prompt-toolkit" />
+            <item index="51" class="java.lang.String" itemvalue="cached-property" />
+            <item index="52" class="java.lang.String" itemvalue="urllib3" />
+            <item index="53" class="java.lang.String" itemvalue="jupyterlab" />
+            <item index="54" class="java.lang.String" itemvalue="Cython" />
+            <item index="55" class="java.lang.String" itemvalue="deap" />
+            <item index="56" class="java.lang.String" itemvalue="scipy" />
+            <item index="57" class="java.lang.String" itemvalue="six" />
+            <item index="58" class="java.lang.String" itemvalue="tornado" />
+            <item index="59" class="java.lang.String" itemvalue="parso" />
+            <item index="60" class="java.lang.String" itemvalue="jupyterlab-server" />
+            <item index="61" class="java.lang.String" itemvalue="bitstring" />
+            <item index="62" class="java.lang.String" itemvalue="nbformat" />
+            <item index="63" class="java.lang.String" itemvalue="ecdsa" />
+            <item index="64" class="java.lang.String" itemvalue="packaging" />
+            <item index="65" class="java.lang.String" itemvalue="torch" />
+            <item index="66" class="java.lang.String" itemvalue="prometheus-client" />
+            <item index="67" class="java.lang.String" itemvalue="chardet" />
+            <item index="68" class="java.lang.String" itemvalue="pandas" />
+            <item index="69" class="java.lang.String" itemvalue="lockfile" />
+            <item index="70" class="java.lang.String" itemvalue="babel" />
+            <item index="71" class="java.lang.String" itemvalue="pytz" />
+            <item index="72" class="java.lang.String" itemvalue="Pillow" />
+            <item index="73" class="java.lang.String" itemvalue="traitlets" />
+            <item index="74" class="java.lang.String" itemvalue="python-dateutil" />
+            <item index="75" class="java.lang.String" itemvalue="nbconvert" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E501" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N806" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="train_CD.cross_domain_train" />
+          <option value="train_CD.base_model" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
