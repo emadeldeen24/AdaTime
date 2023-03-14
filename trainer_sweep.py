@@ -182,7 +182,7 @@ class cross_domain_trainer(object):
 
         # calculate overall
         overall_risks = {risk: np.mean(table_risks.get_column(risk)) for risk in table_risks.columns[2:]}
-        overall_metrics = {metric: np.mean(table_results.get_column(risk)) for metric in table_results.columns[2:]}
+        overall_metrics = {metric: np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]}
 
         # log wabdb
         wandb.log({'results': table_results})
@@ -229,10 +229,8 @@ class cross_domain_trainer(object):
         return dataset_class(), hparams_class()
 
     def load_data(self, src_id, trg_id):
-        self.src_train_dl, self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs,
-                                                             self.hparams)
-        self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,
-                                                             self.hparams)
+        self.src_train_dl, self.src_test_dl = data_generator(self.data_path, src_id, self.dataset_configs,self.hparams)
+        self.trg_train_dl, self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs,  self.hparams)
         self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, 5)
 
     def create_save_dir(self):
