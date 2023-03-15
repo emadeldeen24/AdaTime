@@ -64,7 +64,7 @@ class AbstractTrainer(object):
         self.dataset_configs.final_out_channels = self.dataset_configs.tcn_final_out_channles if args.backbone == "TCN" else self.dataset_configs.final_out_channels
 
         # Specify number of hparams
-        self.default_hparams = {**self.hparams_class.alg_hparams[self.da_method],
+        self.hparams = {**self.hparams_class.alg_hparams[self.da_method],
                                 **self.hparams_class.train_params}
 
         # metrics
@@ -206,8 +206,6 @@ class AbstractTrainer(object):
 
         return risks, metrics
 
-
-
 class Trainer(AbstractTrainer):
     """
    This class contain the main training functions for our AdAtime
@@ -232,10 +230,11 @@ class Trainer(AbstractTrainer):
 
     def wandb_train(self):
 
-        run = wandb.init(config=self.default_hparams)
+        run = wandb.init(config=self.hparams)
         run_name = f"sweep_{self.dataset}"
 
-        self.hparams = wandb.config
+        # # hparams
+        # self.hparams = wandb.config
 
         # Logging
         self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
@@ -245,8 +244,7 @@ class Trainer(AbstractTrainer):
         table_results = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "auroc"], allow_mixed_types=True)
 
         # table with risks
-        table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],
-                                  allow_mixed_types=True)
+        table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],   allow_mixed_types=True)
 
         # metrics
         num_classes = self.dataset_configs.num_classes
@@ -266,10 +264,11 @@ class Trainer(AbstractTrainer):
                 # Load data
                 self.load_data(src_id, trg_id)
 
-                # get algorithm
-                algorithm_class = get_algorithm_class(self.da_method)
+                # get the backbone network
                 backbone_fe = get_backbone_class(self.backbone)
 
+                # get algorithm
+                algorithm_class = get_algorithm_class(self.da_method)
                 self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
                 self.algorithm.to(self.device)
 
@@ -289,6 +288,7 @@ class Trainer(AbstractTrainer):
                 table_results.add_data(scenario, run_id, *metrics)
                 table_risks.add_data(scenario, run_id, *risks)
 
+        # average ,etrocs
         average_metrics = [np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]]
         std_metrics = [np.std(table_results.get_column(metric)) for metric in table_results.columns[2:]]
 
@@ -300,7 +300,7 @@ class Trainer(AbstractTrainer):
         overall_risks = {risk: np.mean(table_risks.get_column(risk)) for risk in table_risks.columns[2:]}
         overall_metrics = {metric: np.mean(table_results.get_column(metric)) for metric in table_results.columns[2:]}
 
-        # log wabdb
+        # log wandb
         wandb.log({'results': table_results})
         wandb.log({'hparams': wandb.Table(
             dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),
@@ -308,12 +308,12 @@ class Trainer(AbstractTrainer):
         wandb.log(overall_risks)
         wandb.log(overall_metrics)
 
+        # finish the run
         run.finish()
 
 
     def train(self):
 
-        self.hparams = self.default_hparams
         run_name = f"{self.run_description}"
 
         # Logging
