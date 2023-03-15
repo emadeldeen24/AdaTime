@@ -1,7 +1,7 @@
 import os
 import argparse
 import warnings
-from trainer_sweep import cross_domain_trainer
+from sweep_trainer import Trainer
 import sklearn.exceptions
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 
@@ -42,7 +42,7 @@ parser.add_argument('--metric_to_minimize',     default="src_risk",             
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    trainer = cross_domain_trainer(args)
+    trainer = Trainer(args)
 
     if args.is_sweep:
         trainer.sweep()

@@ -254,6 +254,17 @@ def calculate_risk(target_model, risk_dataloader, device):
     return cls_loss.item()
 
 
+class DictAsObject:
+    def __init__(self, d):
+        self.__dict__ = d
+
+    def __getattr__(self, name):
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            raise AttributeError(f"'DictAsObject' object has no attribute '{name}'")
+
+
 # For DIRT-T
 class EMA:
     def __init__(self, decay):
@@ -272,3 +283,5 @@ class EMA:
                 if name in self.params and param.requires_grad:
                     self.shadow[name] -= (1 - self.decay) * (self.shadow[name] - param.data)
                     param.data = self.shadow[name]
+
+

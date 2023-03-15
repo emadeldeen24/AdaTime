@@ -10,7 +10,7 @@ from configs.data_model_configs import get_dataset_class
 from configs.hparams import get_hparams_class
 
 from configs.sweep_params import sweep_alg_hparams
-from utils import fix_randomness, copy_Files, starting_logs, save_checkpoint, _calc_metrics
+from utils import fix_randomness, starting_logs
 import warnings
 from sklearn.metrics import f1_score
 import sklearn.exceptions
@@ -81,7 +81,6 @@ class cross_domain_trainer(object):
         sweep_id = wandb.sweep(sweep_config, project=self.sweep_project_wandb, entity=self.wandb_entity)
 
         wandb.agent(sweep_id, self.train, count=sweep_runs_count)  # Training with sweep
-
         # resuming sweep
         # wandb.agent('8wkaibgr', self.train, count=25,project='HHAR_SA_Resnet', entity= 'iclr_rebuttal' )
 
@@ -91,18 +90,16 @@ class cross_domain_trainer(object):
         run_name = f"sweep_{self.dataset}"
 
         self.hparams = wandb.config
+
         # Logging
         self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
         os.makedirs(self.exp_log_dir, exist_ok=True)
-
-        scenarios = self.dataset_configs.scenarios  # return the scenarios given a specific dataset.
 
         # table with metrics
         table_results = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "auroc"], allow_mixed_types=True)
 
         # table with risks
-        table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],
-                                  allow_mixed_types=True)
+        table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],  allow_mixed_types=True)
 
         # metrics
         num_classes = self.dataset_configs.num_classes
@@ -110,15 +107,13 @@ class cross_domain_trainer(object):
         self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")  # .to(self.device)
         self.AUROC = AUROC(task="multiclass", num_classes=num_classes)  # .to(self.device)
 
-        for src_id, trg_id in scenarios:
-
+        for src_id, trg_id in self.dataset_configs.scenarios :
             for run_id in range(self.num_runs):  # specify number of consecutive runs
                 # fixing random seed
                 fix_randomness(run_id)
 
                 # Logging
-                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir,
-                                                                   src_id, trg_id, run_id)
+                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir, src_id, trg_id, run_id)
 
                 # Load data
                 self.load_data(src_id, trg_id)
@@ -133,30 +128,8 @@ class cross_domain_trainer(object):
                 # Average meters
                 loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
 
-                len_dataloader = min(len(self.src_train_dl), len(self.trg_train_dl))
-
+                # run algorithm
                 self.algorithm.update(self.src_train_dl, self.trg_train_dl, loss_avg_meters, self.logger)
-
-                # # training..
-                # for epoch in range(1, self.hparams["num_epochs"] + 1):
-                #     algorithm.train()
-                #     for step, ((src_x, src_y), (trg_x, _)) in enumerate(joint_loaders):
-                #         src_x, src_y, trg_x = src_x.float().to(self.device), src_y.long().to(self.device), \
-                #                               trg_x.float().to(self.device)
-                #
-                #         if self.da_method == "DANN" or self.da_method == "CoDATS":
-                #             losses = algorithm.update(src_x, src_y, trg_x, step, epoch, len_dataloader)
-                #         else:
-                #             losses = algorithm.update(src_x, src_y, trg_x)
-                #
-                #         for key, val in losses.items():
-                #             loss_avg_meters[key].update(val, src_x.size(0))
-                #
-                #     # logging
-                #     self.logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
-                #     for key, val in loss_avg_meters.items():
-                #         self.logger.debug(f'{key}\t: {val.avg:2.4f}')
-                #     self.logger.debug(f'-------------------------------------')
 
                 # calculate risks and metrics
                 risks, metrics = self.calculate_metrics_risks()
@@ -182,9 +155,7 @@ class cross_domain_trainer(object):
 
         # log wabdb
         wandb.log({'results': table_results})
-        wandb.log({'hparams': wandb.Table(
-            dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']),
-            allow_mixed_types=True)})
+        wandb.log({'hparams': wandb.Table(dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']), allow_mixed_types=True)})
         wandb.log(overall_risks)
         wandb.log(overall_metrics)
 
@@ -233,8 +204,7 @@ class cross_domain_trainer(object):
         self.trg_train_dl = data_generator(self.data_path, trg_id, self.dataset_configs, self.hparams, "train")
         self.trg_test_dl = data_generator(self.data_path, trg_id, self.dataset_configs, self.hparams, "test")
 
-        self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, self.dataset_configs,
-                                                     5)  # set 5 to other value if you want other k-shot FST
+        self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, self.dataset_configs,5)  # set 5 to other value if you want other k-shot FST
 
     def create_save_dir(self):
         if not os.path.exists(self.save_dir):
