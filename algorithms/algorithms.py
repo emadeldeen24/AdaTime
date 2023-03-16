@@ -89,10 +89,12 @@ class Deep_Coral(Algorithm):
         self.hparams = hparams
         self.device = device
 
-    def update(self, src_loader, trg_loader , avg_meter, logger):
+    def update(self, src_loader, trg_loader, avg_meter, logger):
 
         for epoch in range(1, self.hparams["num_epochs"] + 1):
             joint_loader = enumerate(zip(src_loader, trg_loader))
+
+            best_src_risk = float('inf')
 
             for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
                 src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
@@ -119,6 +121,13 @@ class Deep_Coral(Algorithm):
                     avg_meter[key].update(val, 32)
 
             self.lr_scheduler.step()
+
+
+            # logging
+            if (epoch + 1) % 10 == 0 and src_cls_loss.detach().item() < best_src_risk:
+                best_src_risk = src_cls_loss.detach().item()
+                save_path = os.path.join(save_dir, f'model_epoch{epoch + 1}.pt')
+
 
             logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
             for key, val in avg_meter.items():

@@ -78,15 +78,12 @@ def starting_logs(data_type, da_method, exp_log_dir, src_id, tgt_id, run_id):
     return logger, log_dir
 
 
-def save_checkpoint(home_path, algorithm, selected_scenarios, dataset_configs, log_dir, hparams):
+def save_checkpoint(home_path, algorithm, log_dir, type='last'):
     save_dict = {
-        "x-domains": selected_scenarios,
-        "configs": dataset_configs.__dict__,
-        "hparams": dict(hparams),
         "model_dict": algorithm.state_dict()
     }
     # save classification report
-    save_path = os.path.join(home_path, log_dir, "checkpoint.pt")
+    save_path = os.path.join(home_path, log_dir, f"{type}_checkpoint.pt")
 
     torch.save(save_dict, save_path)
 

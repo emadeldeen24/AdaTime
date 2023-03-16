@@ -20,11 +20,7 @@ warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWar
 import collections
 from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
-from utils import AverageMeter
-
-
-# torch.backends.cudnn.benchmark = True  # to fasten TCN
-# os.environ['PYTORCH_MPS_FORCE_DISABLE'] = '1'
+from utils import AverageMeter, save_checkpoint
 
 class AbstractTrainer(object):
     """
@@ -226,15 +222,11 @@ class Trainer(AbstractTrainer):
         sweep_id = wandb.sweep(sweep_config, project=self.sweep_project_wandb, entity=self.wandb_entity)
 
         wandb.agent(sweep_id, self.wandb_train, count=sweep_runs_count)
-
-
     def wandb_train(self):
 
         run = wandb.init(config=self.hparams)
         run_name = f"sweep_{self.dataset}"
 
-        # # hparams
-        # self.hparams = wandb.config
 
         # Logging
         self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
@@ -258,8 +250,7 @@ class Trainer(AbstractTrainer):
                 # fixing random seed
                 fix_randomness(run_id)
                 # Logging
-                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir,
-                                                                   src_id, trg_id, run_id)
+                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir, src_id, trg_id, run_id)
 
                 # Load data
                 self.load_data(src_id, trg_id)
@@ -310,8 +301,6 @@ class Trainer(AbstractTrainer):
 
         # finish the run
         run.finish()
-
-
     def train(self):
 
         run_name = f"{self.run_description}"
@@ -359,6 +348,8 @@ class Trainer(AbstractTrainer):
                 # run algorithm
                 self.algorithm.update(self.src_train_dl, self.trg_train_dl, loss_avg_meters, self.logger)
 
+                save_checkpoint(self.home_path, self.algorithm,  self.scenario_log_dir, type='last')
+
                 # calculate risks and metrics
                 risks, metrics = self.calculate_metrics_risks()
 
@@ -382,8 +373,8 @@ class Trainer(AbstractTrainer):
         print(table_risks)
 
         # save to file if needed
-        table_results.to_csv("results.csv")
-        table_risks.to_csv("risks.csv")
+        table_results.to_csv(os.path.join(self.scenario_log_dir,"results.csv"))
+        table_risks.to_csv(os.path.join(self.scenario_log_dir,"risks.csv"))
 
 
 
