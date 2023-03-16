@@ -1,11 +1,9 @@
 import os
 import argparse
 import warnings
-
-from sweep_trainer import Trainer
+from trainers.single_train import Trainer
 import sklearn.exceptions
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
-
 parser = argparse.ArgumentParser()
 
 

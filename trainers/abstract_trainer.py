@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../../ADATIME/')
 import torch
 import torch.nn.functional as F
 from torchmetrics import Accuracy, AUROC, F1Score
@@ -5,22 +7,20 @@ import os
 import wandb
 import pandas as pd
 import numpy as np
+import warnings
+import sklearn.exceptions
+import collections
+
+from torchmetrics import Accuracy, AUROC, F1Score
 from dataloader.dataloader import data_generator, few_shot_data_generator
 from configs.data_model_configs import get_dataset_class
 from configs.hparams import get_hparams_class
-
 from configs.sweep_params import sweep_alg_hparams
-from utils import fix_randomness, starting_logs, DictAsObject
-import warnings
-from sklearn.metrics import f1_score
-import sklearn.exceptions
-
-warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
-
-import collections
+from utils import fix_randomness, starting_logs, DictAsObject,AverageMeter
 from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
-from utils import AverageMeter
+
+warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 
 class AbstractTrainer(object):
     """
@@ -32,17 +32,6 @@ class AbstractTrainer(object):
         self.dataset = args.dataset  # Selected  Dataset
         self.backbone = args.backbone
         self.device = torch.device(args.device)  # device
-        self.num_sweeps = args.num_sweeps
-
-        # Exp Description
-        self.run_description = args.run_description
-        self.experiment_description = args.experiment_description
-        # sweep parameters
-        self.is_sweep = args.is_sweep
-        self.sweep_project_wandb = args.sweep_project_wandb
-        self.wandb_entity = args.wandb_entity
-        self.hp_search_strategy = args.hp_search_strategy
-        self.metric_to_minimize = args.metric_to_minimize
 
         # paths
         self.home_path = os.getcwd()
@@ -64,12 +53,30 @@ class AbstractTrainer(object):
                                 **self.hparams_class.train_params}
 
         # metrics
+        self.num_classes = self.dataset_configs.num_classes
+        self.ACC = Accuracy(task="multiclass", num_classes=self.num_classes)
+        self.F1 = F1Score(task="multiclass", num_classes=self.num_classes, average="macro")
+        self.AUROC = AUROC(task="multiclass", num_classes=self.num_classes)        
+
+        # metrics
 
     def sweep(self):
         # sweep configurations
         pass
-    def wandb_train(self):
-        pass
+    
+    def train_model(self):
+        # Get the algorithm and the backbone network
+        algorithm_class = get_algorithm_class(self.da_method)
+        backbone_fe = get_backbone_class(self.backbone)
+
+        # Initilaize the algorithm
+        self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
+        self.algorithm.to(self.device)
+
+        # Training the model
+        self.last_model, self.best_model = self.algorithm.update(self.src_train_dl, self.trg_train_dl, self.loss_avg_meters, self.logger)
+        return self.last_model, self.best_model
+    
     def evaluate(self, test_loader):
         feature_extractor = self.algorithm.feature_extractor.to(self.device)
         classifier = self.algorithm.classifier.to(self.device)
@@ -149,13 +156,18 @@ class AbstractTrainer(object):
         results_row = [scenario, run_id, *metrics]
         risks_row = [scenario, run_id, *risks]
 
-        # Append rows to the dataframes
-        table_results = table_results.append(pd.DataFrame([results_row], columns=table_results.columns))
-        table_risks = table_risks.append(pd.DataFrame([risks_row], columns=table_risks.columns))
+        # Create new dataframes for each row
+        results_df = pd.DataFrame([results_row], columns=table_results.columns)
+        risks_df = pd.DataFrame([risks_row], columns=table_risks.columns)
+
+        # Concatenate new dataframes with original dataframes
+        table_results = pd.concat([table_results, results_df], ignore_index=True)
+        table_risks = pd.concat([table_risks, risks_df], ignore_index=True)
+
         return table_results, table_risks
 
     def append_mean_std_to_tables(self, table_results, table_risks, results_columns, risks_columns):
-        # Calculate average and standard deviation for metrics
+       # Calculate average and standard deviation for metrics
         avg_metrics = [table_results[metric].mean() for metric in results_columns[2:]]
         std_metrics = [table_results[metric].std() for metric in results_columns[2:]]
 
@@ -163,13 +175,15 @@ class AbstractTrainer(object):
         avg_risks = [table_risks[risk].mean() for risk in risks_columns[2:]]
         std_risks = [table_risks[risk].std() for risk in risks_columns[2:]]
 
-        # Append mean and std to metrics 
-        table_results = table_results.append(pd.DataFrame([['mean', '-', *avg_metrics]], columns=results_columns))
-        table_results = table_results.append(pd.DataFrame([['std', '-', *std_metrics]], columns=results_columns))
+        # Create dataframes for mean and std values
+        mean_metrics_df = pd.DataFrame([['mean', '-', *avg_metrics]], columns=results_columns)
+        std_metrics_df = pd.DataFrame([['std', '-', *std_metrics]], columns=results_columns)
+        mean_risks_df = pd.DataFrame([['mean', '-', *avg_risks]], columns=risks_columns)
+        std_risks_df = pd.DataFrame([['std', '-', *std_risks]], columns=risks_columns)
 
-        # Append mean and std to risks 
-        table_risks = table_risks.append(pd.DataFrame([['mean', '-', *avg_risks]], columns=risks_columns))
-        table_risks = table_risks.append(pd.DataFrame([['std', '-', *std_risks]], columns=risks_columns))
+        # Concatenate original dataframes with mean and std dataframes
+        table_results = pd.concat([table_results, mean_metrics_df, std_metrics_df], ignore_index=True)
+        table_risks = pd.concat([table_risks, mean_risks_df, std_risks_df], ignore_index=True)
 
         # Create a formatting function to format each element in the tables
         format_func = lambda x: f"{x:.4f}" if isinstance(x, float) else x
@@ -221,152 +235,3 @@ class AbstractTrainer(object):
         wandb.log({'hparams': wandb.Table(dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']), allow_mixed_types=True)})
         wandb.log(summary_metrics)
         wandb.log(summary_risks)
-
-
-
-
-class Trainer(AbstractTrainer):
-    """
-   This class contain the main training functions for our AdAtime
-    """
-
-    def __init__(self, args):
-        super(Trainer, self).__init__(args)
-
-    def sweep(self):
-        # sweep configurations
-        sweep_runs_count = self.num_sweeps
-        sweep_config = {
-            'method': self.hp_search_strategy,
-            'metric': {'name': self.metric_to_minimize, 'goal': 'minimize'},
-            'name': self.da_method + '_' + self.backbone,
-            'parameters': {**sweep_alg_hparams[self.da_method]}
-        }
-        sweep_id = wandb.sweep(sweep_config, project=self.sweep_project_wandb, entity=self.wandb_entity)
-
-        wandb.agent(sweep_id, self.wandb_train, count=sweep_runs_count)
-    def wandb_train(self):
-
-        run = wandb.init(config=self.hparams)
-        run_name = f"sweep_{self.dataset}"
-
-
-        # Logging
-        self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
-        os.makedirs(self.exp_log_dir, exist_ok=True)
-
-        # table with metrics
-        self.table_results = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "auroc"], allow_mixed_types=True)
-        # table with risks
-        self.table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],   allow_mixed_types=True)
-
-        # metrics
-        num_classes = self.dataset_configs.num_classes
-        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)  # .to(self.device)
-        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")  # .to(self.device)
-        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)  # .to(self.device)
-
-        # Trainer
-        for src_id, trg_id in self.dataset_configs.scenarios:
-            for run_id in range(self.num_runs):  # specify number of consecutive runs
-                # fixing random seed
-                fix_randomness(run_id)
-                # Logging
-                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir, src_id, trg_id, run_id)
-                                # Average meters
-                self.loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
-
-                # Load data
-                self.load_data(src_id, trg_id)
-
-                # training the model
-                self.last_model, self.best_model = self.train_model()
-
-
-                # calculate risks and metrics
-                risks, metrics = self.calculate_metrics_risks()
-
-                # append results
-                self.table_results.add_data(f"{src_id}_to_{trg_id}", run_id, *metrics)
-                self.table_results.add_data(f"{src_id}_to_{trg_id}", run_id, *risks)
-
-
-        # Logging overall metrics and risks, and hparams
-        self.log_summary_metrics_wandb()
-
-        # finish the run
-        run.finish()
-    def train(self):
-        run_name = f"{self.run_description}"
-
-        # Logging
-        self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
-        os.makedirs(self.exp_log_dir, exist_ok=True)
-
-        # table with metrics
-        results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
-        table_results = pd.DataFrame(columns=results_columns)
-
-        # table with risks
-        risks_columns = ["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"]
-        table_risks = pd.DataFrame(columns=risks_columns)
-
-        # metrics
-        num_classes = self.dataset_configs.num_classes
-        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)
-        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")
-        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)
-
-        # Trainer
-        for src_id, trg_id in self.dataset_configs.scenarios:
-            for run_id in range(self.num_runs):
-                # fixing random seed
-                fix_randomness(run_id)
-
-                # Logging
-                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir,
-                                                                src_id, trg_id, run_id)
-                    # 
-                self.loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
-
-
-                # Load data
-                self.load_data(src_id, trg_id)
-
-                # Train model
-                self.last_model, self.best_model = self.train_model()
-
-                # Save checkpoint
-                self.save_checkpoint(self.home_path, self.scenario_log_dir, self.last_model, self.best_model)
-
-                # Calculate risks and metrics
-                risks, metrics = self.calculate_metrics_risks()
-
-                # Append results to tables
-                scenario = f"{src_id}_to_{trg_id}"
-                table_results, table_risks = self.append_results_to_tables(table_results, table_risks, scenario, run_id, metrics, risks)
-
-        # Calculate and append mean and std to tables
-        table_results, table_risks = self.append_mean_std_to_tables(table_results, table_risks, results_columns, risks_columns)
-
-
-        # Save tables to file if needed
-        self.save_tables_to_file(table_results, table_risks)
-    def train_model(self):
-        # Get the algorithm and the backbone network
-        algorithm_class = get_algorithm_class(self.da_method)
-        backbone_fe = get_backbone_class(self.backbone)
-
-        # Initilaize the algorithm
-        self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
-        self.algorithm.to(self.device)
-
-        # Training the model
-        self.last_model, self.best_model = self.algorithm.update(self.src_train_dl, self.trg_train_dl, self.loss_avg_meters, self.logger)
-        return self.last_model, self.best_model
-
-
-
-
-
-
