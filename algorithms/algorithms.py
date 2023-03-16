@@ -7,7 +7,7 @@ from models.models import classifier, ReverseLayerF, Discriminator, RandomLayer,
 from models.loss import MMD_loss, CORAL, ConditionalEntropyLoss, VAT, LMMD_loss, HoMM_loss, NTXentLoss, SupConLoss
 from utils import EMA
 from torch.optim.lr_scheduler import StepLR
-
+from copy import deepcopy
 
 def get_algorithm_class(algorithm_name):
     """Return the algorithm class with the given name."""
@@ -95,6 +95,7 @@ class Deep_Coral(Algorithm):
             joint_loader = enumerate(zip(src_loader, trg_loader))
 
             best_src_risk = float('inf')
+            best_model = self.network.state_dict()
 
             for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
                 src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
@@ -122,19 +123,19 @@ class Deep_Coral(Algorithm):
 
             self.lr_scheduler.step()
 
+            # saving the best model based on src risk
+            if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
+                best_src_risk = avg_meter['Src_cls_loss'].avg
+                best_model = deepcopy(self.network.state_dict())
 
-            # logging
-            if (epoch + 1) % 10 == 0 and src_cls_loss.detach().item() < best_src_risk:
-                best_src_risk = src_cls_loss.detach().item()
-                save_path = os.path.join(save_dir, f'model_epoch{epoch + 1}.pt')
-
+            last_model = self.network.state_dict()
 
             logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
             for key, val in avg_meter.items():
                 logger.debug(f'{key}\t: {val.avg:2.4f}')
             logger.debug(f'-------------------------------------')
 
-        # return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+        return last_model, best_model
 
 
 class MMDA(Algorithm):

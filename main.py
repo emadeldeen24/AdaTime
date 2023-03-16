@@ -1,6 +1,7 @@
 import os
 import argparse
 import warnings
+
 from sweep_trainer import Trainer
 import sklearn.exceptions
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
@@ -25,10 +26,10 @@ parser.add_argument('--backbone',               default='CNN',                  
 
 # ========= Experiment settings ===============
 parser.add_argument('--num_runs',               default=1,                          type=int, help='Number of consecutive run with different seeds')
-parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
+parser.add_argument('--device',                 default= "mps",                   type=str, help='cpu or cuda')
 
 # ======== sweep settings =====================
-parser.add_argument('--is_sweep',               default=False,                      type=bool, help='singe run or sweep')
+parser.add_argument('--is_sweep',               default=True,                      type=bool, help='singe run or sweep')
 parser.add_argument('--num_sweeps',             default=1,                         type=str, help='Number of sweep runs')
 
 # We run sweeps using wandb plateform, so next parameters are for wandb.
