@@ -58,9 +58,8 @@ class Trainer(AbstractTrainer):
                 # Logging
                 self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir,
                                                                 src_id, trg_id, run_id)
-                    # 
+                # Average meters
                 self.loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
-
 
                 # Load data
                 self.load_data(src_id, trg_id)
@@ -72,29 +71,23 @@ class Trainer(AbstractTrainer):
                 self.save_checkpoint(self.home_path, self.scenario_log_dir, self.last_model, self.best_model)
 
                 # Calculate risks and metrics
-                risks, metrics = self.calculate_metrics_risks()
+                metrics = self.calculate_metrics()
+                risks = self.calculate_risks()
+
 
                 # Append results to tables
                 scenario = f"{src_id}_to_{trg_id}"
-                table_results, table_risks = self.append_results_to_tables(table_results, table_risks, scenario, run_id, metrics, risks)
+                table_results = self.append_results_to_tables(table_results, scenario, run_id, metrics)
+                table_risks = self.append_results_to_tables(table_risks, scenario, run_id, risks)
 
         # Calculate and append mean and std to tables
-        table_results, table_risks = self.append_mean_std_to_tables(table_results, table_risks, results_columns, risks_columns)
+        table_results = self.add_mean_std_table(table_results, results_columns)
+        table_risks = self.add_mean_std_table(table_risks, risks_columns)
 
 
         # Save tables to file if needed
-        self.save_tables_to_file(table_results, table_risks)
-        # Get the algorithm and the backbone network
-        algorithm_class = get_algorithm_class(self.da_method)
-        backbone_fe = get_backbone_class(self.backbone)
-
-        # Initilaize the algorithm
-        self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
-        self.algorithm.to(self.device)
-
-        # Training the model
-        self.last_model, self.best_model = self.algorithm.update(self.src_train_dl, self.trg_train_dl, self.loss_avg_meters, self.logger)
-        return self.last_model, self.best_model
+        self.save_tables_to_file(table_results, 'results')
+        self.save_tables_to_file(table_risks, 'risks')
 
 
 if __name__ == "__main__":
@@ -113,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('--backbone',               default='CNN',                      type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
 
     # ========= Experiment settings ===============
-    parser.add_argument('--num_runs',               default=1,                          type=int, help='Number of consecutive run with different seeds')
+    parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
     parser.add_argument('--device',                 default= "mps",                   type=str, help='cpu or cuda')
 
     args = parser.parse_args()

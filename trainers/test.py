@@ -51,9 +51,6 @@ class Tester(AbstractTrainer):
         results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
         table_results = pd.DataFrame(columns=results_columns)
 
-        # table with risks
-        risks_columns = ["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"]
-        table_risks = pd.DataFrame(columns=risks_columns)
 
         # Trainer
         for src_id, trg_id in self.dataset_configs.scenarios:
@@ -75,29 +72,28 @@ class Tester(AbstractTrainer):
                 # Build model
                 self.algorithm = self.build_model()
 
-                # load chechpoint 
+                # Load chechpoint 
                 last_chk, best_chk = self.load_checkpoint( self.scenario_log_dir)
 
-                # load the model dictionary 
+                # Load the model dictionary 
                 self.algorithm.network.load_state_dict(best_chk)
 
-
-                # testing the model
+                # Testing the model
                 self.test_model(self.algorithm)
 
-
                 # Calculate risks and metrics
-                risks, metrics = self.calculate_metrics_risks()
+                metrics = self.calculate_metrics()
 
                 # Append results to tables
                 scenario = f"{src_id}_to_{trg_id}"
-                table_results, table_risks = self.append_results_to_tables(table_results, table_risks, scenario, run_id, metrics, risks)
+                table_results = self.append_results_to_tables(table_results, scenario, run_id, metrics)
+
 
         # Calculate and append mean and std to tables
-        table_results, table_risks = self.append_mean_std_to_tables(table_results, table_risks, results_columns, risks_columns)
+        table_results = self.add_mean_std_table(table_results, results_columns)
 
         # Save tables to file if needed
-        self.save_tables_to_file(table_results, table_risks)
+        self.save_tables_to_file(table_results, 'results')
      
 
     def test_model(self):
@@ -130,6 +126,8 @@ class Tester(AbstractTrainer):
         self.loss = torch.tensor(total_loss).mean()  # average loss
         self.full_preds = torch.cat((preds_list))
         self.full_labels = torch.cat((labels_list))
+
+
 
 if __name__ == "__main__":
 

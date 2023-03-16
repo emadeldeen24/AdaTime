@@ -156,7 +156,7 @@ class AbstractTrainer(object):
 
         return risks, metrics
     
-    def append_results_to_tables(self, table_results, table_risks, scenario, run_id, metrics, risks):
+    def append_results_to_tables_old(self, table_results, table_risks, scenario, run_id, metrics, risks):
         # Create metrics and risks rows
         results_row = [scenario, run_id, *metrics]
         risks_row = [scenario, run_id, *risks]
@@ -199,10 +199,9 @@ class AbstractTrainer(object):
 
         return table_results, table_risks
 
-    def save_tables_to_file(self,table_results, table_risks):
+    def save_tables_to_file(self,table_results, name):
         # save to file if needed
-        table_results.to_csv(os.path.join(self.exp_log_dir,"results.csv"))
-        table_risks.to_csv(os.path.join(self.exp_log_dir,"risks.csv"))
+        table_results.to_csv(os.path.join(self.exp_log_dir,"{name}.csv"))
 
     def save_checkpoint(self, home_path, log_dir, last_model, best_model):
         save_dict = {
@@ -240,3 +239,61 @@ class AbstractTrainer(object):
         wandb.log({'hparams': wandb.Table(dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']), allow_mixed_types=True)})
         wandb.log(summary_metrics)
         wandb.log(summary_risks)
+
+    def calculate_metrics(self):
+       
+        self.evaluate(self.trg_test_dl)
+        # accuracy  
+        acc = self.ACC(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
+        # f1
+        f1 = self.F1(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
+        # auroc 
+        auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
+        
+        return acc, f1, auroc
+
+    def calculate_risks(self):
+         # calculation based source test data
+        self.evaluate(self.src_test_dl)
+        src_risk = self.loss.item()
+        # calculation based few_shot test data
+        self.evaluate(self.few_shot_dl_5)
+        fst_risk = self.loss.item()
+        # calculation based target test data
+        self.evaluate(self.trg_test_dl)
+        trg_risk = self.loss.item()
+
+        return src_risk, fst_risk, trg_risk
+
+    def append_results_to_tables(self, table, scenario, run_id, metrics):
+
+        # Create metrics and risks rows
+        results_row = [scenario, run_id, *metrics]
+
+        # Create new dataframes for each row
+        results_df = pd.DataFrame([results_row], columns=table.columns)
+
+        # Concatenate new dataframes with original dataframes
+        table = pd.concat([table, results_df], ignore_index=True)
+
+        return table
+    
+    def add_mean_std_table(self, table, columns):
+        # Calculate average and standard deviation for metrics
+        avg_metrics = [table[metric].mean() for metric in columns[2:]]
+        std_metrics = [table[metric].std() for metric in columns[2:]]
+
+        # Create dataframes for mean and std values
+        mean_metrics_df = pd.DataFrame([['mean', '-', *avg_metrics]], columns=columns)
+        std_metrics_df = pd.DataFrame([['std', '-', *std_metrics]], columns=columns)
+
+        # Concatenate original dataframes with mean and std dataframes
+        table = pd.concat([table, mean_metrics_df, std_metrics_df], ignore_index=True)
+
+        # Create a formatting function to format each element in the tables
+        format_func = lambda x: f"{x:.4f}" if isinstance(x, float) else x
+
+        # Apply the formatting function to each element in the tables
+        table = table.applymap(format_func)
+
+        return table 
