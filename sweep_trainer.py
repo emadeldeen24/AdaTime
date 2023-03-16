@@ -299,7 +299,7 @@ class Trainer(AbstractTrainer):
 
         # finish the run
         run.finish()
-    def train_v0(self):
+
 
         run_name = f"{self.run_description}"
 
