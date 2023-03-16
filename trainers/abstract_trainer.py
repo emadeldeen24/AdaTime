@@ -158,7 +158,7 @@ class AbstractTrainer(object):
 
     def save_tables_to_file(self,table_results, name):
         # save to file if needed
-        table_results.to_csv(os.path.join(self.exp_log_dir,"{name}.csv"))
+        table_results.to_csv(os.path.join(self.exp_log_dir,f"{name}.csv"))
 
     def save_checkpoint(self, home_path, log_dir, last_model, best_model):
         save_dict = {
