@@ -194,7 +194,7 @@ class AbstractTrainer(object):
         save_path = os.path.join(home_path, log_dir, f"checkpoint.pt")
         torch.save(save_dict, save_path)
     
-    def append_avg_std_wandb_table(self):
+    def log_summary_metrics_wandb(self):
        
         # Calculate average and standard deviation for metrics
         avg_metrics = [np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]]
@@ -203,6 +203,9 @@ class AbstractTrainer(object):
         avg_risks = [np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
         std_risks = [np.std(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
 
+                # Estaimate summary metrics
+        summary_risks = {risk: np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]}
+        summary_metrics = {metric: np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]}
 
         # append avg and std values to metrics
         self.table_results.add_data('mean', '-', *avg_metrics)
@@ -211,12 +214,6 @@ class AbstractTrainer(object):
         # append avg and std values to risks 
         self.table_risks.add_data('mean', '-', *avg_risks)
         self.table_risks.add_data('std', '-', *std_risks)
-       
-    def log_summary_metrics_wandb(self):
-        
-        # Estaimate summary metrics
-        summary_risks = {risk: np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]}
-        summary_metrics = {metric: np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]}
 
         # log wandb
         wandb.log({'results': self.table_results})
@@ -224,6 +221,8 @@ class AbstractTrainer(object):
         wandb.log({'hparams': wandb.Table(dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']), allow_mixed_types=True)})
         wandb.log(summary_metrics)
         wandb.log(summary_risks)
+
+
 
 
 class Trainer(AbstractTrainer):
@@ -291,88 +290,12 @@ class Trainer(AbstractTrainer):
                 self.table_results.add_data(f"{src_id}_to_{trg_id}", run_id, *metrics)
                 self.table_results.add_data(f"{src_id}_to_{trg_id}", run_id, *risks)
 
-        # Calculate and append average results to wandb table
-        self.append_avg_std_wandb_table()
-        
+
         # Logging overall metrics and risks, and hparams
         self.log_summary_metrics_wandb()
 
         # finish the run
         run.finish()
-
-
-        run_name = f"{self.run_description}"
-
-        # Logging
-        self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
-        os.makedirs(self.exp_log_dir, exist_ok=True)
-
-        # table with metrics
-        results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
-        table_results = pd.DataFrame(columns=results_columns)
-
-        # table with risks
-        risks_columns = ["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"]
-        table_risks = pd.DataFrame(columns=risks_columns)
-
-        # metrics
-        num_classes = self.dataset_configs.num_classes
-        self.ACC = Accuracy(task="multiclass", num_classes=num_classes)  # .to(self.device)
-        self.F1 = F1Score(task="multiclass", num_classes=num_classes, average="macro")  # .to(self.device)
-        self.AUROC = AUROC(task="multiclass", num_classes=num_classes)  # .to(self.device)
-
-        # Trainer
-        for src_id, trg_id in self.dataset_configs.scenarios:
-            for run_id in range(self.num_runs):  # specify number of consecutive runs
-                # fixing random seed
-                fix_randomness(run_id)
-                # Logging
-                self.logger, self.scenario_log_dir = starting_logs(self.dataset, self.da_method, self.exp_log_dir,
-                                                                   src_id, trg_id, run_id)
-
-                # Load data
-                self.load_data(src_id, trg_id)
-
-                # get algorithm
-                algorithm_class = get_algorithm_class(self.da_method)
-                backbone_fe = get_backbone_class(self.backbone)
-
-                self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
-                self.algorithm.to(self.device)
-
-                # Average meters
-                loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
-
-                # run algorithm
-                self.last_model, self.best_model = self.algorithm.update(self.src_train_dl, self.trg_train_dl, loss_avg_meters, self.logger)
-
-                save_checkpoint(self.home_path,  self.scenario_log_dir, self.last_model, self.best_model)
-
-                # calculate risks and metrics
-                risks, metrics = self.calculate_metrics_risks()
-
-                # calculate metrics on target test labeled data
-                scenario = f"{src_id}_to_{trg_id}"
-
-                # append results
-                table_results = table_results.append(pd.DataFrame([[scenario, run_id, *metrics]], columns=results_columns))
-                table_risks = table_risks.append(pd.DataFrame([[scenario, run_id, *risks]], columns=risks_columns))
-
-        average_metrics = [table_results[metric].mean() for metric in results_columns[2:]]
-        std_metrics = [table_results[metric].std() for metric in results_columns[2:]]
-
-        # add avg and std values
-        table_results = table_results.append(pd.DataFrame([['mean', '-', *average_metrics]], columns=results_columns))
-        table_results = table_results.append(pd.DataFrame([['std', '-', *std_metrics]], columns=results_columns))
-
-
-        # log pandas dataframes to file or console
-        print(table_results)
-        print(table_risks)
-
-        # save to file if needed
-        table_results.to_csv(os.path.join(self.self.exp_log_dir,"results.csv"))
-        table_risks.to_csv(os.path.join(self.self.exp_log_dir,"risks.csv"))
     def train(self):
         run_name = f"{self.run_description}"
 
