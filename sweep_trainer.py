@@ -258,7 +258,6 @@ class Trainer(AbstractTrainer):
 
         # table with metrics
         self.table_results = wandb.Table(columns=["scenario", "run", "acc", "f1_score", "auroc"], allow_mixed_types=True)
-
         # table with risks
         self.table_risks = wandb.Table(columns=["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"],   allow_mixed_types=True)
 
