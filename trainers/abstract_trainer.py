@@ -155,49 +155,6 @@ class AbstractTrainer(object):
         metrics = acc, f1, auroc
 
         return risks, metrics
-    
-    def append_results_to_tables_old(self, table_results, table_risks, scenario, run_id, metrics, risks):
-        # Create metrics and risks rows
-        results_row = [scenario, run_id, *metrics]
-        risks_row = [scenario, run_id, *risks]
-
-        # Create new dataframes for each row
-        results_df = pd.DataFrame([results_row], columns=table_results.columns)
-        risks_df = pd.DataFrame([risks_row], columns=table_risks.columns)
-
-        # Concatenate new dataframes with original dataframes
-        table_results = pd.concat([table_results, results_df], ignore_index=True)
-        table_risks = pd.concat([table_risks, risks_df], ignore_index=True)
-
-        return table_results, table_risks
-
-    def append_mean_std_to_tables(self, table_results, table_risks, results_columns, risks_columns):
-       # Calculate average and standard deviation for metrics
-        avg_metrics = [table_results[metric].mean() for metric in results_columns[2:]]
-        std_metrics = [table_results[metric].std() for metric in results_columns[2:]]
-
-        # Calculate average and standard deviation for risks
-        avg_risks = [table_risks[risk].mean() for risk in risks_columns[2:]]
-        std_risks = [table_risks[risk].std() for risk in risks_columns[2:]]
-
-        # Create dataframes for mean and std values
-        mean_metrics_df = pd.DataFrame([['mean', '-', *avg_metrics]], columns=results_columns)
-        std_metrics_df = pd.DataFrame([['std', '-', *std_metrics]], columns=results_columns)
-        mean_risks_df = pd.DataFrame([['mean', '-', *avg_risks]], columns=risks_columns)
-        std_risks_df = pd.DataFrame([['std', '-', *std_risks]], columns=risks_columns)
-
-        # Concatenate original dataframes with mean and std dataframes
-        table_results = pd.concat([table_results, mean_metrics_df, std_metrics_df], ignore_index=True)
-        table_risks = pd.concat([table_risks, mean_risks_df, std_risks_df], ignore_index=True)
-
-        # Create a formatting function to format each element in the tables
-        format_func = lambda x: f"{x:.4f}" if isinstance(x, float) else x
-
-        # Apply the formatting function to each element in the tables
-        table_results = table_results.applymap(format_func)
-        table_risks = table_risks.applymap(format_func)
-
-        return table_results, table_risks
 
     def save_tables_to_file(self,table_results, name):
         # save to file if needed
@@ -249,7 +206,7 @@ class AbstractTrainer(object):
         f1 = self.F1(self.full_preds.argmax(dim=1).cpu(), self.full_labels.cpu()).item()
         # auroc 
         auroc = self.AUROC(self.full_preds.cpu(), self.full_labels.cpu()).item()
-        
+
         return acc, f1, auroc
 
     def calculate_risks(self):
