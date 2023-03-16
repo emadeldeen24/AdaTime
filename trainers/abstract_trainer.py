@@ -33,6 +33,11 @@ class AbstractTrainer(object):
         self.backbone = args.backbone
         self.device = torch.device(args.device)  # device
 
+        # Exp Description
+        self.run_description = args.da_method
+        self.experiment_description = args.dataset 
+
+
         # paths
         self.home_path = os.getcwd()
         self.save_dir = args.save_dir

@@ -31,11 +31,6 @@ class Trainer(AbstractTrainer):
     def __init__(self, args):
         super(Trainer, self).__init__(args)
 
-        # Exp Description
-        self.run_description = args.run_description
-        self.experiment_description = args.experiment_description
-
-  
 
     def train(self):
         run_name = f"{self.run_description}"
@@ -106,9 +101,7 @@ if __name__ == "__main__":
 
     # ========  Experiments Name ================
     parser.add_argument('--save_dir',               default='experiments_logs',         type=str, help='Directory containing all experiments')
-    parser.add_argument('--experiment_description', default='Deep_Coral',               type=str, help='Name of your experiment (EEG, HAR, HHAR_SA, ')
-    parser.add_argument('--run_description',        default='test',                     type=str, help='name of your runs')
-
+    
     # ========= Select the DA methods ============
     parser.add_argument('--da_method',              default='Deep_Coral',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 

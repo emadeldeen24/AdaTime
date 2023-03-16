@@ -10,7 +10,7 @@ class HAR():
     def __init__(self):
         super(HAR, self).__init__()
         self.train_params = {
-            'num_epochs': 1,
+            'num_epochs': 40,
             'batch_size': 32,
             'weight_decay': 1e-4,
             'step_size': 50,
