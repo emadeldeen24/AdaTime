@@ -9,6 +9,7 @@ from utils import EMA
 from torch.optim.lr_scheduler import StepLR
 from copy import deepcopy
 
+
 def get_algorithm_class(algorithm_name):
     """Return the algorithm class with the given name."""
     if algorithm_name not in globals():
@@ -22,10 +23,14 @@ class Algorithm(torch.nn.Module):
     Subclasses should implement the update() method.
     """
 
-    def __init__(self, configs):
+    def __init__(self, configs, backbone):
         super(Algorithm, self).__init__()
         self.configs = configs
         self.cross_entropy = nn.CrossEntropyLoss()
+
+        self.feature_extractor = backbone(configs)
+        self.classifier = classifier(configs)
+        self.network = nn.Sequential(self.feature_extractor, self.classifier)
 
     def update(self, *args, **kwargs):
         raise NotImplementedError
@@ -70,30 +75,32 @@ class Deep_Coral(Algorithm):
     """
     Deep Coral: https://arxiv.org/abs/1607.01719
     """
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(Deep_Coral, self).__init__(configs)
 
-        self.coral = CORAL()
+    def __init__(self, backbone, configs, hparams, device):
+        super(Deep_Coral, self).__init__(configs, backbone)
 
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
-
         self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+
+        # correlation alignment loss
+        self.coral = CORAL()
+
+        # hparams
         self.hparams = hparams
+        # device
         self.device = device
 
     def update(self, src_loader, trg_loader, avg_meter, logger):
 
-        # defining best model
+        # defining best and last model
         best_src_risk = float('inf')
         best_model = None
+        last_model = self.network.state_dict()
 
         for epoch in range(1, self.hparams["num_epochs"] + 1):
             joint_loader = enumerate(zip(src_loader, trg_loader))
@@ -117,7 +124,8 @@ class Deep_Coral(Algorithm):
                 loss.backward()
                 self.optimizer.step()
 
-                losses = {'Total_loss': loss.item(), 'Src_cls_loss': src_cls_loss.item(), 'coral_loss': coral_loss.item()}
+                losses = {'Total_loss': loss.item(), 'Src_cls_loss': src_cls_loss.item(),
+                          'coral_loss': coral_loss.item()}
 
                 for key, val in losses.items():
                     avg_meter[key].update(val, 32)
@@ -126,13 +134,9 @@ class Deep_Coral(Algorithm):
 
             # saving the best model based on src risk
             if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
-                # logger.debug(f'Best Risk: {best_src_risk}')
-                # logger.debug(f"Current Risk: {avg_meter['Src_cls_loss'].avg}")
                 best_src_risk = avg_meter['Src_cls_loss'].avg
                 best_model = deepcopy(self.network.state_dict())
 
-
-            last_model = self.network.state_dict()
 
             logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
             for key, val in avg_meter.items():
@@ -732,16 +736,17 @@ class AdvSKM(Algorithm):
         self.optimizer.step()
 
         return {'Total_loss': loss.item(), 'MMD_loss': mmd_loss_adv.item(), 'Src_cls_loss': src_cls_loss.item()}
-    
+
+
 class SASA(nn.Module):
     def __init__(self, backbone_fe, configs, hparams, device):
         super(SASA, self).__init__()
 
-       # feature_length for classifier
-        configs.features_len =1
+        # feature_length for classifier
+        configs.features_len = 1
         self.classifier = classifier(configs)
-       # feature length for feature extractor
-        configs.features_len =1
+        # feature length for feature extractor
+        configs.features_len = 1
         self.feature_extractor = CNN_ATTN(configs)
 
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
@@ -782,6 +787,7 @@ class SASA(nn.Module):
 
         return {'Total_loss': total_loss.item(), 'MMD_loss': domain_loss_intra.item(),
                 'Src_cls_loss': src_cls_loss.item()}
+
     def mmd_loss(self, src_struct, tgt_struct, weight):
         delta = torch.mean(src_struct - tgt_struct, dim=-2)
         loss_value = torch.norm(delta, 2) * weight

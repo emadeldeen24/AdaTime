@@ -170,32 +170,44 @@ class AbstractTrainer(object):
         # save classification report
         save_path = os.path.join(home_path, log_dir, f"checkpoint.pt")
         torch.save(save_dict, save_path)
-    
-    def log_summary_metrics_wandb(self):
+
+    def calculate_avg_std_wandb_table(self, results):
+
+        avg_metrics = [np.mean(results.get_column(metric)) for metric in results.columns[2:]]
+        std_metrics = [np.std(results.get_column(metric)) for metric in results.columns[2:]]
+        summary_metrics = {metric: np.mean(results.get_column(metric)) for metric in results.columns[2:]}
+
+        results.add_data('mean', '-', *avg_metrics)
+        results.add_data('std', '-', *std_metrics)
+
+        return results, summary_metrics
+
+    def log_summary_metrics_wandb(self, results, risks):
        
         # Calculate average and standard deviation for metrics
-        avg_metrics = [np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]]
-        std_metrics = [np.std(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]]
+        avg_metrics = [np.mean(results.get_column(metric)) for metric in results.columns[2:]]
+        std_metrics = [np.std(results.get_column(metric)) for metric in results.columns[2:]]
 
-        print(avg_metrics)
-        avg_risks = [np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
-        std_risks = [np.std(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
+        avg_risks = [np.mean(risks.get_column(risk)) for risk in risks.columns[2:]]
+        std_risks = [np.std(risks.get_column(risk)) for risk in risks.columns[2:]]
 
-                # Estaimate summary metrics
-        summary_risks = {risk: np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]}
-        summary_metrics = {metric: np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]}
+        # Estimate summary metrics
+        summary_metrics = {metric: np.mean(results.get_column(metric)) for metric in results.columns[2:]}
+        summary_risks = {risk: np.mean(risks.get_column(risk)) for risk in risks.columns[2:]}
+
 
         # append avg and std values to metrics
-        self.table_results.add_data('mean', '-', *avg_metrics)
-        self.table_results.add_data('std', '-', *std_metrics)
+        results.add_data('mean', '-', *avg_metrics)
+        results.add_data('std', '-', *std_metrics)
 
         # append avg and std values to risks 
-        self.table_risks.add_data('mean', '-', *avg_risks)
-        self.table_risks.add_data('std', '-', *std_risks)
+        results.add_data('mean', '-', *avg_risks)
+        risks.add_data('std', '-', *std_risks)
 
+    def wandb_logging(self, total_results, total_risks, summary_metrics, summary_risks):
         # log wandb
-        wandb.log({'results': self.table_results})
-        wandb.log({'risks': self.table_risks})
+        wandb.log({'results': total_results})
+        wandb.log({'risks': total_risks})
         wandb.log({'hparams': wandb.Table(dataframe=pd.DataFrame(dict(self.hparams).items(), columns=['parameter', 'value']), allow_mixed_types=True)})
         wandb.log(summary_metrics)
         wandb.log(summary_risks)
