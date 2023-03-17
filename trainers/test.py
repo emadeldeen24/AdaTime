@@ -86,8 +86,8 @@ class TargetTest(AbstractTrainer):
                 best_results = self.append_results_to_tables(best_results, f"{src_id}_to_{trg_id}", run_id,
                                                              best_metrics)
 
-        summary_last = {metric: np.mean(self.last_results.get_column(metric)) for metric in results_columns[2:]}
-        summary_best = {metric: np.mean(self.best_results.get_column(metric)) for metric in results_columns[2:]}
+        summary_last = {metric: np.mean(last_results[metric]) for metric in results_columns[2:]}
+        summary_best = {metric: np.mean(best_results[metric]) for metric in results_columns[2:]}
 
         # Calculate and append mean and std to tables
         last_results = self.add_mean_std_table(last_results, results_columns)

@@ -41,7 +41,10 @@ class AbstractTrainer(object):
         self.home_path = os.path.dirname(os.getcwd())
         self.save_dir = args.save_dir
         self.data_path = os.path.join(args.data_path, self.dataset)
-        # self.create_save_dir()
+        # self.create_save_dir(os.path.join(self.home_path,  self.save_dir ))
+
+
+
 
         # Specify runs
         self.num_runs = args.num_runs
@@ -127,9 +130,9 @@ class AbstractTrainer(object):
         self.few_shot_dl_5 = few_shot_data_generator(self.trg_test_dl, self.dataset_configs,
                                                      5)  # set 5 to other value if you want other k-shot FST
 
-    def create_save_dir(self):
-        if not os.path.exists(self.save_dir):
-            os.mkdir(self.save_dir)
+    def create_save_dir(self, save_dir):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
 
     def calculate_metrics_risks(self):
         # calculation based source test data
@@ -174,6 +177,7 @@ class AbstractTrainer(object):
         avg_metrics = [np.mean(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]]
         std_metrics = [np.std(self.table_results.get_column(metric)) for metric in self.table_results.columns[2:]]
 
+        print(avg_metrics)
         avg_risks = [np.mean(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
         std_risks = [np.std(self.table_risks.get_column(risk)) for risk in self.table_risks.columns[2:]]
 

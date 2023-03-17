@@ -64,10 +64,10 @@ class Trainer(AbstractTrainer):
                 self.load_data(src_id, trg_id)
 
                 # Train model
-                self.last_model, self.best_model = self.train_model()
+                last_model, best_model = self.train_model()
 
                 # Save checkpoint
-                self.save_checkpoint(self.home_path, self.scenario_log_dir, self.last_model, self.best_model)
+                self.save_checkpoint(self.home_path, self.scenario_log_dir, last_model, best_model)
 
                 # Calculate risks and metrics
                 metrics = self.calculate_metrics()
