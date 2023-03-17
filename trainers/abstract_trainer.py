@@ -37,12 +37,11 @@ class AbstractTrainer(object):
         self.run_description = args.da_method
         self.experiment_description = args.dataset 
 
-
         # paths
-        self.home_path = os.getcwd()
+        self.home_path = os.path.dirname(os.getcwd())
         self.save_dir = args.save_dir
         self.data_path = os.path.join(args.data_path, self.dataset)
-        self.create_save_dir()
+        # self.create_save_dir()
 
         # Specify runs
         self.num_runs = args.num_runs

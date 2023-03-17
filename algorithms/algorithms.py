@@ -91,11 +91,12 @@ class Deep_Coral(Algorithm):
 
     def update(self, src_loader, trg_loader, avg_meter, logger):
 
+        # defining best model
+        best_src_risk = float('inf')
+        best_model = self.network.state_dict()
+
         for epoch in range(1, self.hparams["num_epochs"] + 1):
             joint_loader = enumerate(zip(src_loader, trg_loader))
-
-            best_src_risk = float('inf')
-            best_model = self.network.state_dict()
 
             for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
                 src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
@@ -127,6 +128,8 @@ class Deep_Coral(Algorithm):
             if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
                 best_src_risk = avg_meter['Src_cls_loss'].avg
                 best_model = deepcopy(self.network.state_dict())
+                logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+                logger.debug(f'Best Model saved....')
 
             last_model = self.network.state_dict()
 

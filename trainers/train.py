@@ -31,13 +31,12 @@ class Trainer(AbstractTrainer):
     def __init__(self, args):
         super(Trainer, self).__init__(args)
 
+        # Logging
+        self.exp_log_dir = os.path.join(self.home_path, self.save_dir, self.experiment_description, f"{self.run_description}")
+        os.makedirs(self.exp_log_dir, exist_ok=True)
+
 
     def train(self):
-        run_name = f"{self.run_description}"
-
-        # Logging
-        self.exp_log_dir = os.path.join(self.save_dir, self.experiment_description, run_name)
-        os.makedirs(self.exp_log_dir, exist_ok=True)
 
         # table with metrics
         results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
@@ -93,13 +92,13 @@ class Trainer(AbstractTrainer):
 if __name__ == "__main__":
 
     # ========  Experiments Name ================
-    parser.add_argument('--save_dir',               default='experiments_logs',         type=str, help='Directory containing all experiments')
+    parser.add_argument('--save_dir',               default='../experiments_logs',         type=str, help='Directory containing all experiments')
     
     # ========= Select the DA methods ============
     parser.add_argument('--da_method',              default='Deep_Coral',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 
     # ========= Select the DATASET ==============
-    parser.add_argument('--data_path',              default=r'./data',                  type=str, help='Path containing datase2t')
+    parser.add_argument('--data_path',              default=r'../data',                  type=str, help='Path containing datase2t')
     parser.add_argument('--dataset',                default='HAR',                      type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
 
     # ========= Select the BACKBONE ==============
@@ -107,7 +106,7 @@ if __name__ == "__main__":
 
     # ========= Experiment settings ===============
     parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
-    parser.add_argument('--device',                 default= "mps",                   type=str, help='cpu or cuda')
+    parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
 
     args = parser.parse_args()
 
