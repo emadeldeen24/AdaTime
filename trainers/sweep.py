@@ -60,7 +60,8 @@ class Trainer(AbstractTrainer):
 
     def train(self):
         run = wandb.init(config=self.hparams)
-
+        self.hparams= wandb.config
+        
         # create tables for results and risks
         columns = ["scenario", "run", "acc", "f1_score", "auroc"]
         table_results = wandb.Table(columns=columns, allow_mixed_types=True)
