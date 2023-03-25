@@ -128,10 +128,16 @@ and the different risks scores.
 If you found this work useful for you, please consider citing it.
 ```
 @article{adatime,
-  title   = {AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data},
-  author  = {Ragab, Mohamed and Eldele, Emadeldeen and Tan, Wee Ling and Foo, Chuan-Sheng and Chen, Zhenghua and Wu, Min and Kwoh, Chee Keong and Li, Xiaoli},
-  journal = {arXiv preprint arXiv:2203.08321},
-  year    = {2022}
+  author = {Ragab, Mohamed and Eldele, Emadeldeen and Tan, Wee Ling and Foo, Chuan-Sheng and Chen, Zhenghua and Wu, Min and Kwoh, Chee-Keong and Li, Xiaoli},
+  title = {ADATIME: A Benchmarking Suite for Domain Adaptation on Time Series Data},
+  year = {2023},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  issn = {1556-4681},
+  url = {https://doi.org/10.1145/3587937},
+  doi = {10.1145/3587937},
+  journal = {ACM Trans. Knowl. Discov. Data},
+  month = {mar}
 }
 ```
 
