@@ -1,5 +1,5 @@
 # [TKDD 2023] AdaTime: A Benchmarking Suite for Domain Adaptation on Time Series Data [[Paper](https://arxiv.org/abs/2203.08321)] [[Cite](#citation)]
-#### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen, Min Wu, Chee Kwoh, Xiaoli Li* <br/> * Equal contribution
+#### *by: Mohamed Ragab\*, Emadeldeen Eldele\*,  Wee Ling Tan, Chuan-Sheng Foo, Zhenghua Chen\^, Min Wu, Chee Kwoh, Xiaoli Li* <br/> * Equal contribution <br/> ^ Corresponding author
 
 ## Published in the [ACM Transactions on Knowledge Discovery from Data (TKDD)](https://dl.acm.org/doi/10.1145/3587937).
 **AdaTime** is a PyTorch suite to systematically and fairly evaluate different domain adaptation methods on time series data.
