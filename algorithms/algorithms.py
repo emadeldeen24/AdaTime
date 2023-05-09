@@ -32,9 +32,40 @@ class Algorithm(torch.nn.Module):
         self.classifier = classifier(configs)
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
 
-    def update(self, *args, **kwargs):
+    # function for domain adaptation loss according to each algorithm
+    def construct_loss(self):
         raise NotImplementedError
 
+    # update function is common to all algorithms
+    def update(self, src_loader, trg_loader, avg_meter, logger):
+        # defining best and last model
+        best_src_risk = float('inf')
+        best_model = None
+        last_model = self.network.state_dict()
+
+        for epoch in range(1, self.hparams["num_epochs"] + 1):
+            joint_loader = enumerate(zip(src_loader, trg_loader))
+
+            # training loop 
+            self.train_loop(joint_loader, avg_meter, epoch)
+
+            # saving the best model based on src risk
+            if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
+                best_src_risk = avg_meter['Src_cls_loss'].avg
+                best_model = deepcopy(self.network.state_dict())
+
+
+            logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+            for key, val in avg_meter.items():
+                logger.debug(f'{key}\t: {val.avg:2.4f}')
+            logger.debug(f'-------------------------------------')
+
+        return last_model, best_model
+    
+    # train loop vary from one method to another
+    def train_loop(self, *args, **kwargs):
+        raise NotImplementedError
+       
 
 class Lower_Upper_bounds(Algorithm):
     """
@@ -86,112 +117,108 @@ class Deep_Coral(Algorithm):
             weight_decay=hparams["weight_decay"]
         )
         self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
-
-        # correlation alignment loss
-        self.coral = CORAL()
-
         # hparams
         self.hparams = hparams
         # device
         self.device = device
+        # construct loss
+        self.construct_loss()
+    
+    def construct_loss(self):
+        # correlation alignment loss
+        self.coral = CORAL()
 
-    def update(self, src_loader, trg_loader, avg_meter, logger):
+    def train_loop(self, joint_loader, avg_meter, epoch):
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
 
-        # defining best and last model
-        best_src_risk = float('inf')
-        best_model = None
-        last_model = self.network.state_dict()
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        for epoch in range(1, self.hparams["num_epochs"] + 1):
-            joint_loader = enumerate(zip(src_loader, trg_loader))
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-            for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
-                src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
+            trg_feat = self.feature_extractor(trg_x)
 
-                src_feat = self.feature_extractor(src_x)
-                src_pred = self.classifier(src_feat)
+            coral_loss = self.coral(src_feat, trg_feat)
 
-                src_cls_loss = self.cross_entropy(src_pred, src_y)
+            loss = self.hparams["coral_wt"] * coral_loss + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
 
-                trg_feat = self.feature_extractor(trg_x)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-                coral_loss = self.coral(src_feat, trg_feat)
+            losses = {'Total_loss': loss.item(), 'Src_cls_loss': src_cls_loss.item(),
+                    'coral_loss': coral_loss.item()}
 
-                loss = self.hparams["coral_wt"] * coral_loss + \
-                       self.hparams["src_cls_loss_wt"] * src_cls_loss
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
 
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-
-                losses = {'Total_loss': loss.item(), 'Src_cls_loss': src_cls_loss.item(),
-                          'coral_loss': coral_loss.item()}
-
-                for key, val in losses.items():
-                    avg_meter[key].update(val, 32)
-
-            self.lr_scheduler.step()
-
-            # saving the best model based on src risk
-            if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
-                best_src_risk = avg_meter['Src_cls_loss'].avg
-                best_model = deepcopy(self.network.state_dict())
-
-
-            logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
-            for key, val in avg_meter.items():
-                logger.debug(f'{key}\t: {val.avg:2.4f}')
-            logger.debug(f'-------------------------------------')
-
-        return last_model, best_model
-
+        self.lr_scheduler.step()
 
 class MMDA(Algorithm):
     """
     MMDA: https://arxiv.org/abs/1901.00282
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(MMDA, self).__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super(MMDA, self).__init__(configs, backbone)
 
-        self.mmd = MMD_loss()
-        self.coral = CORAL()
-        self.cond_ent = ConditionalEntropyLoss()
-
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
+        self.device = device
+    
+    def construct_loss(self):
+        self.mmd = MMD_loss()
+        self.coral = CORAL()
+        self.cond_ent = ConditionalEntropyLoss()
 
-    def update(self, src_x, src_y, trg_x):
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
 
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+    def train_loop(self, joint_loader, avg_meter, epoch):
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
 
-        trg_feat = self.feature_extractor(trg_x)
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        coral_loss = self.coral(src_feat, trg_feat)
-        mmd_loss = self.mmd(src_feat, trg_feat)
-        cond_ent_loss = self.cond_ent(trg_feat)
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        loss = self.hparams["coral_wt"] * coral_loss + \
-               self.hparams["mmd_wt"] * mmd_loss + \
-               self.hparams["cond_ent_wt"] * cond_ent_loss + \
-               self.hparams["src_cls_loss_wt"] * src_cls_loss
+            trg_feat = self.feature_extractor(trg_x)
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        return {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'MMD_loss': mmd_loss.item(),
-                'cond_ent_wt': cond_ent_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            trg_feat = self.feature_extractor(trg_x)
+
+            coral_loss = self.coral(src_feat, trg_feat)
+            mmd_loss = self.mmd(src_feat, trg_feat)
+            cond_ent_loss = self.cond_ent(trg_feat)
+
+            loss = self.hparams["coral_wt"] * coral_loss + \
+                self.hparams["mmd_wt"] * mmd_loss + \
+                self.hparams["cond_ent_wt"] * cond_ent_loss + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses =  {'Total_loss': loss.item(), 'Coral_loss': coral_loss.item(), 'MMD_loss': mmd_loss.item(),
+                    'cond_ent_wt': cond_ent_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 
 class DANN(Algorithm):
@@ -202,67 +229,78 @@ class DANN(Algorithm):
     def __init__(self, backbone_fe, configs, hparams, device):
         super(DANN, self).__init__(configs)
 
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
-        self.domain_classifier = Discriminator(configs)
-
+        
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
-            weight_decay=hparams["weight_decay"], betas=(0.5, 0.99)
+            weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
+        self.hparams = hparams
+        # device
+        self.device = device
+
+        self.domain_classifier = Discriminator(configs)
         self.optimizer_disc = torch.optim.Adam(
             self.domain_classifier.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"], betas=(0.5, 0.99)
         )
-        self.hparams = hparams
-        self.device = device
 
-    def update(self, src_x, src_y, trg_x, step, epoch, len_dataloader):
-        p = float(step + epoch * len_dataloader) / self.hparams["num_epochs"] + 1 / len_dataloader
-        alpha = 2. / (1. + np.exp(-10 * p)) - 1
+    def train_loop(self, joint_loader, avg_meter, epoch):
 
-        # zero grad
-        self.optimizer.zero_grad()
-        self.optimizer_disc.zero_grad()
+        len_dataloader = len(joint_loader)
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
 
-        domain_label_src = torch.ones(len(src_x)).to(self.device)
-        domain_label_trg = torch.zeros(len(trg_x)).to(self.device)
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
+            
+            p = float(step + epoch * len_dataloader) / self.hparams["num_epochs"] + 1 / len_dataloader
+            alpha = 2. / (1. + np.exp(-10 * p)) - 1
 
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+            # zero grad
+            self.optimizer.zero_grad()
+            self.optimizer_disc.zero_grad()
 
-        trg_feat = self.feature_extractor(trg_x)
+            domain_label_src = torch.ones(len(src_x)).to(self.device)
+            domain_label_trg = torch.zeros(len(trg_x)).to(self.device)
 
-        # Task classification  Loss
-        src_cls_loss = self.cross_entropy(src_pred.squeeze(), src_y)
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        # Domain classification loss
-        # source
-        src_feat_reversed = ReverseLayerF.apply(src_feat, alpha)
-        src_domain_pred = self.domain_classifier(src_feat_reversed)
-        src_domain_loss = self.cross_entropy(src_domain_pred, domain_label_src.long())
+            trg_feat = self.feature_extractor(trg_x)
 
-        # target
-        trg_feat_reversed = ReverseLayerF.apply(trg_feat, alpha)
-        trg_domain_pred = self.domain_classifier(trg_feat_reversed)
-        trg_domain_loss = self.cross_entropy(trg_domain_pred, domain_label_trg.long())
+            # Task classification  Loss
+            src_cls_loss = self.cross_entropy(src_pred.squeeze(), src_y)
 
-        # Total domain loss
-        domain_loss = src_domain_loss + trg_domain_loss
+            # Domain classification loss
+            # source
+            src_feat_reversed = ReverseLayerF.apply(src_feat, alpha)
+            src_domain_pred = self.domain_classifier(src_feat_reversed)
+            src_domain_loss = self.cross_entropy(src_domain_pred, domain_label_src.long())
 
-        loss = self.hparams["src_cls_loss_wt"] * src_cls_loss + \
-               self.hparams["domain_loss_wt"] * domain_loss
+            # target
+            trg_feat_reversed = ReverseLayerF.apply(trg_feat, alpha)
+            trg_domain_pred = self.domain_classifier(trg_feat_reversed)
+            trg_domain_loss = self.cross_entropy(trg_domain_pred, domain_label_trg.long())
 
-        loss.backward()
-        self.optimizer.step()
-        self.optimizer_disc.step()
+            # Total domain loss
+            domain_loss = src_domain_loss + trg_domain_loss
 
-        return {'Total_loss': loss.item(), 'Domain_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            loss = self.hparams["src_cls_loss_wt"] * src_cls_loss + \
+                self.hparams["domain_loss_wt"] * domain_loss
 
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer_disc.step()
+
+            losses =  {'Total_loss': loss.item(), 'Domain_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+           
+            for key, val in losses.items():
+                            avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 class CDAN(Algorithm):
     """
