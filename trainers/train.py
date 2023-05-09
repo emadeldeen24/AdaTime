@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../ADATIME')
+# sys.path.append('../')
 
 import torch
 import torch.nn.functional as F
@@ -17,7 +17,7 @@ import sklearn.exceptions
 from utils import fix_randomness, starting_logs, AverageMeter
 from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
-from abstract_trainer import AbstractTrainer
+from trainers.abstract_trainer import AbstractTrainer
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 parser = argparse.ArgumentParser()
        
@@ -35,6 +35,7 @@ class Trainer(AbstractTrainer):
         self.exp_log_dir = os.path.join(self.home_path, self.save_dir, self.experiment_description, f"{self.run_description}")
         os.makedirs(self.exp_log_dir, exist_ok=True)
 
+        # 
 
     def train(self):
 
@@ -87,27 +88,27 @@ class Trainer(AbstractTrainer):
         self.save_tables_to_file(table_risks, 'risks')
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # ========  Experiments Name ================
-    parser.add_argument('--save_dir',               default='../experiments_logs',         type=str, help='Directory containing all experiments')
+#     # ========  Experiments Name ================
+#     parser.add_argument('--save_dir',               default='../experiments_logs',         type=str, help='Directory containing all experiments')
     
-    # ========= Select the DA methods ============
-    parser.add_argument('--da_method',              default='Deep_Coral',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
+#     # ========= Select the DA methods ============
+#     parser.add_argument('--da_method',              default='Deep_Coral',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 
-    # ========= Select the DATASET ==============
-    parser.add_argument('--data_path',              default=r'../ADATIME_data',                  type=str, help='Path containing datase2t')
-    parser.add_argument('--dataset',                default='HAR',                      type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
+#     # ========= Select the DATASET ==============
+#     parser.add_argument('--data_path',              default=r'../ADATIME_data',                  type=str, help='Path containing datase2t')
+#     parser.add_argument('--dataset',                default='HAR',                      type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
 
-    # ========= Select the BACKBONE ==============
-    parser.add_argument('--backbone',               default='CNN',                      type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
+#     # ========= Select the BACKBONE ==============
+#     parser.add_argument('--backbone',               default='CNN',                      type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
 
-    # ========= Experiment settings ===============
-    parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
-    parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
+#     # ========= Experiment settings ===============
+#     parser.add_argument('--num_runs',               default=3,                          type=int, help='Number of consecutive run with different seeds')
+#     parser.add_argument('--device',                 default= "cuda",                   type=str, help='cpu or cuda')
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
 
-    trainer = Trainer(args)
-    trainer.train()
+#     trainer = Trainer(args)
+#     trainer.train()

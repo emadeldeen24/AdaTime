@@ -17,6 +17,15 @@ class Load_Dataset(Dataset):
 
         # Load samples
         x_data = dataset["samples"]
+
+        # Load labels
+        y_data = dataset.get("labels")
+        if y_data is not None and isinstance(y_data, np.ndarray):
+            y_data = torch.from_numpy(y_data)
+        
+        # Convert to torch tensor
+        if isinstance(x_data, np.ndarray):
+            x_data = torch.from_numpy(x_data)
         
         # Check samples dimensions.
         # The dimension of the data is expected to be (N, C, L)
@@ -26,21 +35,16 @@ class Load_Dataset(Dataset):
         elif len(x_data.shape) == 3 and x_data.shape[1] != self.num_channels:
             x_data = x_data.transpose(1, 2)
 
-        # Convert to torch tensor
-        if isinstance(x_data, np.ndarray):
-            x_data = torch.from_numpy(x_data)
 
-        # Load labels
-        y_data = dataset.get("labels")
-        if y_data is not None and isinstance(y_data, np.ndarray):
-            y_data = torch.from_numpy(y_data)
+
 
         # Normalize data
         if dataset_configs.normalize:
             data_mean = torch.mean(x_data, dim=(0, 2))
             data_std = torch.std(x_data, dim=(0, 2))
             self.transform = transforms.Normalize(mean=data_mean, std=data_std)
-
+        else:
+            self.transform = None
         self.x_data = x_data.float()
         self.y_data = y_data.long() if y_data is not None else None
         self.len = x_data.shape[0]

@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('../ADATIME')
+sys.path.append('../')
 
 import torch
 import torch.nn.functional as F
@@ -18,7 +18,7 @@ import sklearn.exceptions
 from utils import fix_randomness, starting_logs, AverageMeter
 from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
-from abstract_trainer import AbstractTrainer
+from trainers.abstract_trainer import AbstractTrainer
 
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 parser = argparse.ArgumentParser()
@@ -138,26 +138,26 @@ class TargetTest(AbstractTrainer):
         return self.calculate_metrics()
 
 
-if __name__ == "__main__":
-    # ========  Experiments Name ================
-    parser.add_argument('--save_dir', default='experiments_logs', type=str, help='Directory containing all experiments')
+# if __name__ == "__main__":
+#     # ========  Experiments Name ================
+#     parser.add_argument('--save_dir', default='experiments_logs', type=str, help='Directory containing all experiments')
 
-    # ========= Select the DA methods ============
-    parser.add_argument('--da_method', default='Deep_Coral', type=str,
-                        help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
+#     # ========= Select the DA methods ============
+#     parser.add_argument('--da_method', default='Deep_Coral', type=str,
+#                         help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
 
-    # ========= Select the DATASET ==============
-    parser.add_argument('--data_path', default=r'../data', type=str, help='Path containing datase2t')
-    parser.add_argument('--dataset', default='HAR', type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
+#     # ========= Select the DATASET ==============
+#     parser.add_argument('--data_path', default=r'../data', type=str, help='Path containing datase2t')
+#     parser.add_argument('--dataset', default='HAR', type=str, help='Dataset of choice: (WISDM - EEG - HAR - HHAR_SA)')
 
-    # ========= Select the BACKBONE ==============
-    parser.add_argument('--backbone', default='CNN', type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
+#     # ========= Select the BACKBONE ==============
+#     parser.add_argument('--backbone', default='CNN', type=str, help='Backbone of choice: (CNN - RESNET18 - TCN)')
 
-    # ========= Experiment settings ===============
-    parser.add_argument('--num_runs', default=1, type=int, help='Number of consecutive run with different seeds')
-    parser.add_argument('--device', default="cuda", type=str, help='cpu or cuda')
+#     # ========= Experiment settings ===============
+#     parser.add_argument('--num_runs', default=1, type=int, help='Number of consecutive run with different seeds')
+#     parser.add_argument('--device', default="cuda", type=str, help='cpu or cuda')
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
-    tester = TargetTest(args)
-    tester.scenario_test()
+#     tester = TargetTest(args)
+#     tester.scenario_test()

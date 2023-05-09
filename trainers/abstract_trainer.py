@@ -38,7 +38,7 @@ class AbstractTrainer(object):
         self.experiment_description = args.dataset 
 
         # paths
-        self.home_path = os.path.dirname(os.getcwd())
+        self.home_path =  os.getcwd() #os.path.dirname(os.getcwd())
         self.save_dir = args.save_dir
         self.data_path = os.path.join(args.data_path, self.dataset)
         # self.create_save_dir(os.path.join(self.home_path,  self.save_dir ))

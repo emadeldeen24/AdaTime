@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('../ADATIME')
+sys.path.append('../')
 import torch
 import torch.nn.functional as F
 import os
