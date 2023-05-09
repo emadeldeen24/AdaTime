@@ -5,7 +5,6 @@ parser = argparse.ArgumentParser()
 
 
 
-
 if __name__ == "__main__":
     # ========= Select the DA methods ============
     parser.add_argument('--da_method', default='Deep_Coral', type=str,

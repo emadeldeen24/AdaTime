@@ -35,9 +35,6 @@ class Load_Dataset(Dataset):
         elif len(x_data.shape) == 3 and x_data.shape[1] != self.num_channels:
             x_data = x_data.transpose(1, 2)
 
-
-
-
         # Normalize data
         if dataset_configs.normalize:
             data_mean = torch.mean(x_data, dim=(0, 2))
