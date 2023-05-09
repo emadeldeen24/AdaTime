@@ -47,7 +47,6 @@ class Trainer(AbstractTrainer):
         table_risks = pd.DataFrame(columns=risks_columns)
 
 
-
         # Trainer
         for src_id, trg_id in self.dataset_configs.scenarios:
             for run_id in range(self.num_runs):
@@ -72,7 +71,6 @@ class Trainer(AbstractTrainer):
                 # Calculate risks and metrics
                 metrics = self.calculate_metrics()
                 risks = self.calculate_risks()
-
 
                 # Append results to tables
                 scenario = f"{src_id}_to_{trg_id}"

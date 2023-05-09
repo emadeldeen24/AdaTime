@@ -26,15 +26,12 @@ class Algorithm(torch.nn.Module):
     def __init__(self, configs, backbone):
         super(Algorithm, self).__init__()
         self.configs = configs
-        self.cross_entropy = nn.CrossEntropyLoss()
 
+        self.cross_entropy = nn.CrossEntropyLoss()
         self.feature_extractor = backbone(configs)
         self.classifier = classifier(configs)
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
 
-    # function for domain adaptation loss according to each algorithm
-    def construct_loss(self):
-        raise NotImplementedError
 
     # update function is common to all algorithms
     def update(self, src_loader, trg_loader, avg_meter, logger):
@@ -121,12 +118,10 @@ class Deep_Coral(Algorithm):
         self.hparams = hparams
         # device
         self.device = device
-        # construct loss
-        self.construct_loss()
-    
-    def construct_loss(self):
+
         # correlation alignment loss
         self.coral = CORAL()
+
 
     def train_loop(self, joint_loader, avg_meter, epoch):
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
