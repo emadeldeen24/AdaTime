@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
 
 #TODO:
-# 1- Change the naming of the functions ( Done)
-# 2- Change the algorithms following DCORAL
-# 3- Add the best hparams 
+# 1- Change the naming of the functions ---> ( Done)
+# 2- Change the algorithms following DCORAL 
 # 4- Add pretrain based methods (ADDA, MCD)
+# 5- Add the best hparams 
