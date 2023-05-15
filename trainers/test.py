@@ -68,20 +68,26 @@ class TargetTest(AbstractTrainer):
                 self.load_data(src_id, trg_id)
 
                 # Build model
-                self.algorithm = self.build_model()
+                self.initialize_algorithm()
 
                 # Load chechpoint 
                 last_chk, best_chk = self.load_checkpoint(self.scenario_log_dir)
 
-                # Testing the model
-                last_metrics = self.model_test(last_chk)
-                best_metrics = self.model_test(best_chk)
-
-                # Append results to tables
+                # Testing the last model
+                self.algorithm.network.load_state_dict(last_chk)
+                last_metrics = self.evaluate(self.trg_test_dl)
                 last_results = self.append_results_to_tables(last_results, f"{src_id}_to_{trg_id}", run_id,
                                                              last_metrics)
+                self.calculate_metrics()
+                
+
+                # Testing the best model
+                self.algorithm.network.load_state_dict(best_chk)
+                best_metrics = self.evaluate(self.trg_test_dl)
+                # Append results to tables
                 best_results = self.append_results_to_tables(best_results, f"{src_id}_to_{trg_id}", run_id,
                                                              best_metrics)
+                self.calculate_metrics()
 
         summary_last = {metric: np.mean(last_results[metric]) for metric in results_columns[2:]}
         summary_best = {metric: np.mean(best_results[metric]) for metric in results_columns[2:]}
@@ -97,6 +103,8 @@ class TargetTest(AbstractTrainer):
         for summary_name, summary in [('Last', summary_last), ('Best', summary_best)]:
             for key, val in summary.items():
                 print(f'{summary_name}: {key}\t: {val:2.4f}')
+
+
 
     def model_test(self, chkpoint):
         # Load the model dictionary

@@ -34,3 +34,11 @@ if __name__ == "__main__":
     elif args.phase == 'test':
         tester = TargetTest(args)
         tester.scenario_test()
+
+
+
+#TODO:
+# 1- Change the naming of the functions
+# 2- Change the algorithms following DCORAL
+# 3- Add the best hparams 
+# 4- Add pretrain based methods (ADDA, MCD)

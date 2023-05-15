@@ -105,7 +105,7 @@ class Deep_Coral(Algorithm):
     """
 
     def __init__(self, backbone, configs, hparams, device):
-        super(Deep_Coral, self).__init__(configs, backbone)
+        super().__init__(configs, backbone)
 
         # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
@@ -157,7 +157,7 @@ class MMDA(Algorithm):
     """
 
     def __init__(self, backbone, configs, hparams, device):
-        super(MMDA, self).__init__(configs, backbone)
+        super().__init__(configs, backbone)
 
         # optimizer and scheduler
         self.optimizer = torch.optim.Adam(

@@ -71,6 +71,16 @@ class AbstractTrainer(object):
         # sweep configurations
         pass
     
+    def initialize_algorithm(self):
+        # get algorithm class
+        algorithm_class = get_algorithm_class(self.da_method)
+        backbone_fe = get_backbone_class(self.backbone)
+
+        # Initilaize the algorithm
+        self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
+        self.algorithm.to(self.device)
+
+    
     def train_model(self):
         # Get the algorithm and the backbone network
         algorithm_class = get_algorithm_class(self.da_method)

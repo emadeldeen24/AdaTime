@@ -34,8 +34,6 @@ class Trainer(AbstractTrainer):
         self.exp_log_dir = os.path.join(self.home_path, self.save_dir, self.experiment_description, f"{self.run_description}")
         os.makedirs(self.exp_log_dir, exist_ok=True)
 
-        # 
-
     def train(self):
 
         # table with metrics
@@ -61,9 +59,15 @@ class Trainer(AbstractTrainer):
 
                 # Load data
                 self.load_data(src_id, trg_id)
+                
+                # initiate the domain adaptation algorithm
+                self.initialize_algorithm()
 
-                # Train model
-                last_model, best_model = self.train_model()
+                # Train the domain adaptation algorithm
+                self.last_model, self.best_model = self.algorithm.update(self.src_train_dl, self.trg_train_dl, self.loss_avg_meters, self.logger)
+
+                # # Train model
+                # last_model, best_model = self.train_model()
 
                 # Save checkpoint
                 self.save_checkpoint(self.home_path, self.scenario_log_dir, last_model, best_model)
