@@ -34,14 +34,16 @@ class AbstractTrainer(object):
         self.device = torch.device(args.device)  # device
 
         # Exp Description
-        self.run_description = args.da_method
         self.experiment_description = args.dataset 
+        self.run_description = f"{args.da_method}_{args.exp_name}"
 
         # paths
         self.home_path =  os.getcwd() #os.path.dirname(os.getcwd())
         self.save_dir = args.save_dir
         self.data_path = os.path.join(args.data_path, self.dataset)
         # self.create_save_dir(os.path.join(self.home_path,  self.save_dir ))
+        self.exp_log_dir = os.path.join(self.home_path, self.save_dir, self.experiment_description, f"{self.run_description}")
+        os.makedirs(self.exp_log_dir, exist_ok=True)
 
 
 

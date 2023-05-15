@@ -44,7 +44,7 @@ class Algorithm(torch.nn.Module):
             joint_loader = enumerate(zip(src_loader, trg_loader))
 
             # training loop 
-            self.train_loop(joint_loader, avg_meter, epoch)
+            self.training_epoch(joint_loader, avg_meter, epoch)
 
             # saving the best model based on src risk
             if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
@@ -60,7 +60,7 @@ class Algorithm(torch.nn.Module):
         return last_model, best_model
     
     # train loop vary from one method to another
-    def train_loop(self, *args, **kwargs):
+    def training_epoch(self, *args, **kwargs):
         raise NotImplementedError
        
 
@@ -123,7 +123,7 @@ class Deep_Coral(Algorithm):
         self.coral = CORAL()
 
 
-    def train_loop(self, joint_loader, avg_meter, epoch):
+    def training_epoch(self, joint_loader, avg_meter, epoch):
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
             src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
 
@@ -177,7 +177,7 @@ class MMDA(Algorithm):
         self.cond_ent = ConditionalEntropyLoss()
 
 
-    def train_loop(self, joint_loader, avg_meter, epoch):
+    def training_epoch(self, joint_loader, avg_meter, epoch):
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
             src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
 
@@ -244,7 +244,7 @@ class DANN(Algorithm):
             weight_decay=hparams["weight_decay"], betas=(0.5, 0.99)
         )
 
-    def train_loop(self, joint_loader, avg_meter, epoch):
+    def training_epoch(self, joint_loader, avg_meter, epoch):
 
         len_dataloader = len(joint_loader)
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
