@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument('--exp_name',               default='EXP1',         type=str, help='experiment name')
 
     # ========= Select the DA methods ============
-    parser.add_argument('--da_method',              default='DANN',               type=str, help='DANN, Deep_Coral, WDGRL, MMDA, VADA, DIRT, CDAN, ADDA, HoMM, CoDATS')
+    parser.add_argument('--da_method',              default='CoTMix',               type=str, help='Deep_Coral, MMDA, DANN, CDAN, DIRT, DSAN, HoMM, CoDATS, AdvSKM, SASA, CoTMix')
 
     # ========= Select the DATASET ==============
     parser.add_argument('--data_path',              default=r'../ADATIME_data',                  type=str, help='Path containing datase2t')
@@ -43,6 +43,9 @@ if __name__ == "__main__":
 
 #TODO:
 # 1- Change the naming of the functions ---> ( Done)
-# 2- Change the algorithms following DCORAL 
+# 2- Change the algorithms following DCORAL --> (Done)
+# 3- Keep one trainer for both train and test -->(Done)
+# 4- Creat the new joint loader that consider the all possible batches --> Done
+# 4- Add the best hparams 
+# 5- Implement Lower/Upper Bound Approach
 # 4- Add pretrain based methods (ADDA, MCD)
-# 5- Add the best hparams 

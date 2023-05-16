@@ -418,8 +418,8 @@ class DIRT(Algorithm):
     DIRT-T: https://arxiv.org/abs/1802.08735
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super().__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
         # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
@@ -526,7 +526,7 @@ class DSAN(Algorithm):
     """
 
     def __init__(self, backbone, configs, hparams, device):
-        super().__init__(configs)
+        super().__init__(configs, backbone)
 
         # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
@@ -577,54 +577,66 @@ class DSAN(Algorithm):
                 avg_meter[key].update(val, 32)
 
         self.lr_scheduler.step()
-        
+
 class HoMM(Algorithm):
     """
     HoMM: https://arxiv.org/pdf/1912.11976.pdf
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(HoMM, self).__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-        self.coral = CORAL()
-
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
         self.device = device
+
+        # aligment losses
+        self.coral = CORAL()
         self.HoMM_loss = HoMM_loss()
 
-    def update(self, src_x, src_y, trg_x):
-        # extract source features
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
 
-        # extract target features
-        trg_feat = self.feature_extractor(trg_x)
-        trg_pred = self.classifier(trg_feat)
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
 
-        # calculate source classification loss
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)           # extract source features
+            
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        # calculate lmmd loss
-        domain_loss = self.HoMM_loss(src_feat, trg_feat)
+            # extract target features
+            trg_feat = self.feature_extractor(trg_x)
+            trg_pred = self.classifier(trg_feat)
 
-        # calculate the total loss
-        loss = self.hparams["domain_loss_wt"] * domain_loss + \
-               self.hparams["src_cls_loss_wt"] * src_cls_loss
+            # calculate source classification loss
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+            # calculate lmmd loss
+            domain_loss = self.HoMM_loss(src_feat, trg_feat)
 
-        return {'Total_loss': loss.item(), 'HoMM_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            # calculate the total loss
+            loss = self.hparams["domain_loss_wt"] * domain_loss + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses =  {'Total_loss': loss.item(), 'HoMM_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 
 class DDC(Algorithm):
@@ -632,191 +644,228 @@ class DDC(Algorithm):
     DDC: https://arxiv.org/abs/1412.3474
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(DDC, self).__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
         self.device = device
+
+        # Aligment losses
         self.mmd_loss = MMD_loss()
 
-    def update(self, src_x, src_y, trg_x):
-        # extract source features
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+    def training_epoch(self, src_loader, trg_loader, avg_meter, epoch):
 
-        # extract target features
-        trg_feat = self.feature_extractor(trg_x)
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
 
-        # calculate source classification loss
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)           # extract source features
+            # extract source features
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        # calculate mmd loss
-        domain_loss = self.mmd_loss(src_feat, trg_feat)
+            # extract target features
+            trg_feat = self.feature_extractor(trg_x)
 
-        # calculate the total loss
-        loss = self.hparams["domain_loss_wt"] * domain_loss + \
-               self.hparams["src_cls_loss_wt"] * src_cls_loss
+            # calculate source classification loss
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+            # calculate mmd loss
+            domain_loss = self.mmd_loss(src_feat, trg_feat)
 
-        return {'Total_loss': loss.item(), 'MMD_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            # calculate the total loss
+            loss = self.hparams["domain_loss_wt"] * domain_loss + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
 
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses =  {'Total_loss': loss.item(), 'MMD_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 class CoDATS(Algorithm):
     """
     CoDATS: https://arxiv.org/pdf/2005.10996.pdf
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(CoDATS, self).__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-        self.feature_extractor = backbone_fe(configs)
         # we replace the original classifier with codats the classifier
         # remember to use same name of self.classifier, as we use it for the model evaluation
         self.classifier = codats_classifier(configs)
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
 
+        # optimizer and scheduler
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
+        self.hparams = hparams
+        # device
+        self.device = device
+
+
+        # Domain classifier
         self.domain_classifier = Discriminator(configs)
 
-        self.optimizer = torch.optim.Adam(
-            list(self.feature_extractor.parameters()) + list(self.classifier.parameters()),
-            lr=hparams["learning_rate"],
-            weight_decay=hparams["weight_decay"], betas=(0.5, 0.99)
-        )
         self.optimizer_disc = torch.optim.Adam(
             self.domain_classifier.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"], betas=(0.5, 0.99)
         )
-        self.hparams = hparams
-        self.device = device
 
-    def update(self, src_x, src_y, trg_x, step, epoch, len_dataloader):
-        p = float(step + epoch * len_dataloader) / self.hparams["num_epochs"] + 1 / len_dataloader
-        alpha = 2. / (1. + np.exp(-10 * p)) - 1
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
 
-        # zero grad
-        self.optimizer.zero_grad()
-        self.optimizer_disc.zero_grad()
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        num_batches = max(len(src_loader), len(trg_loader))
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)           # extract source features
+        
+            p = float(step + epoch * num_batches) / self.hparams["num_epochs"] + 1 / num_batches
+            alpha = 2. / (1. + np.exp(-10 * p)) - 1
 
-        domain_label_src = torch.ones(len(src_x)).to(self.device)
-        domain_label_trg = torch.zeros(len(trg_x)).to(self.device)
+            # zero grad
+            self.optimizer.zero_grad()
+            self.optimizer_disc.zero_grad()
 
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+            domain_label_src = torch.ones(len(src_x)).to(self.device)
+            domain_label_trg = torch.zeros(len(trg_x)).to(self.device)
 
-        trg_feat = self.feature_extractor(trg_x)
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        # Task classification  Loss
-        src_cls_loss = self.cross_entropy(src_pred.squeeze(), src_y)
+            trg_feat = self.feature_extractor(trg_x)
 
-        # Domain classification loss
-        # source
-        src_feat_reversed = ReverseLayerF.apply(src_feat, alpha)
-        src_domain_pred = self.domain_classifier(src_feat_reversed)
-        src_domain_loss = self.cross_entropy(src_domain_pred, domain_label_src.long())
+            # Task classification  Loss
+            src_cls_loss = self.cross_entropy(src_pred.squeeze(), src_y)
 
-        # target
-        trg_feat_reversed = ReverseLayerF.apply(trg_feat, alpha)
-        trg_domain_pred = self.domain_classifier(trg_feat_reversed)
-        trg_domain_loss = self.cross_entropy(trg_domain_pred, domain_label_trg.long())
+            # Domain classification loss
+            # source
+            src_feat_reversed = ReverseLayerF.apply(src_feat, alpha)
+            src_domain_pred = self.domain_classifier(src_feat_reversed)
+            src_domain_loss = self.cross_entropy(src_domain_pred, domain_label_src.long())
 
-        # Total domain loss
-        domain_loss = src_domain_loss + trg_domain_loss
+            # target
+            trg_feat_reversed = ReverseLayerF.apply(trg_feat, alpha)
+            trg_domain_pred = self.domain_classifier(trg_feat_reversed)
+            trg_domain_loss = self.cross_entropy(trg_domain_pred, domain_label_trg.long())
 
-        loss = self.hparams["src_cls_loss_wt"] * src_cls_loss + \
-               self.hparams["domain_loss_wt"] * domain_loss
+            # Total domain loss
+            domain_loss = src_domain_loss + trg_domain_loss
 
-        loss.backward()
-        self.optimizer.step()
-        self.optimizer_disc.step()
+            loss = self.hparams["src_cls_loss_wt"] * src_cls_loss + \
+                self.hparams["domain_loss_wt"] * domain_loss
 
-        return {'Total_loss': loss.item(), 'Domain_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer_disc.step()
 
+            losses =  {'Total_loss': loss.item(), 'Domain_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 class AdvSKM(Algorithm):
     """
     AdvSKM: https://www.ijcai.org/proceedings/2021/0378.pdf
     """
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(AdvSKM, self).__init__(configs)
-        self.AdvSKM_embedder = AdvSKM_Disc(configs).to(device)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
+        self.hparams = hparams
+        # device
+        self.device = device
 
+        # Aligment losses
+        self.mmd_loss = MMD_loss()
+        self.AdvSKM_embedder = AdvSKM_Disc(configs).to(device)
         self.optimizer_disc = torch.optim.Adam(
             self.AdvSKM_embedder.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
 
-        self.hparams = hparams
-        self.device = device
-        self.mmd_loss = MMD_loss()
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
 
-    def update(self, src_x, src_y, trg_x):
-        # extract source features
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)         # extract source features
+            
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        # extract target features
-        trg_feat = self.feature_extractor(trg_x)
+            # extract target features
+            trg_feat = self.feature_extractor(trg_x)
 
-        source_embedding_disc = self.AdvSKM_embedder(src_feat.detach())
-        target_embedding_disc = self.AdvSKM_embedder(trg_feat.detach())
-        mmd_loss = - self.mmd_loss(source_embedding_disc, target_embedding_disc)
-        mmd_loss.requires_grad = True
+            source_embedding_disc = self.AdvSKM_embedder(src_feat.detach())
+            target_embedding_disc = self.AdvSKM_embedder(trg_feat.detach())
+            mmd_loss = - self.mmd_loss(source_embedding_disc, target_embedding_disc)
+            mmd_loss.requires_grad = True
 
-        # update discriminator
-        self.optimizer_disc.zero_grad()
-        mmd_loss.backward()
-        self.optimizer_disc.step()
+            # update discriminator
+            self.optimizer_disc.zero_grad()
+            mmd_loss.backward()
+            self.optimizer_disc.step()
 
-        # calculate source classification loss
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+            # calculate source classification loss
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        # domain loss.
-        source_embedding_disc = self.AdvSKM_embedder(src_feat)
-        target_embedding_disc = self.AdvSKM_embedder(trg_feat)
+            # domain loss.
+            source_embedding_disc = self.AdvSKM_embedder(src_feat)
+            target_embedding_disc = self.AdvSKM_embedder(trg_feat)
 
-        mmd_loss_adv = self.mmd_loss(source_embedding_disc, target_embedding_disc)
-        mmd_loss_adv.requires_grad = True
+            mmd_loss_adv = self.mmd_loss(source_embedding_disc, target_embedding_disc)
+            mmd_loss_adv.requires_grad = True
 
-        # calculate the total loss
-        loss = self.hparams["domain_loss_wt"] * mmd_loss_adv + \
-               self.hparams["src_cls_loss_wt"] * src_cls_loss
+            # calculate the total loss
+            loss = self.hparams["domain_loss_wt"] * mmd_loss_adv + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
 
-        # update optimizer
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+            # update optimizer
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-        return {'Total_loss': loss.item(), 'MMD_loss': mmd_loss_adv.item(), 'Src_cls_loss': src_cls_loss.item()}
+            losses =  {'Total_loss': loss.item(), 'MMD_loss': mmd_loss_adv.item(), 'Src_cls_loss': src_cls_loss.item()}
+            for key, val in losses.items():
+                    avg_meter[key].update(val, 32)
 
+        self.lr_scheduler.step()
 
-class SASA(nn.Module):
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(SASA, self).__init__()
+class SASA(Algorithm):
+    
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
         # feature_length for classifier
         configs.features_len = 1
@@ -824,46 +873,56 @@ class SASA(nn.Module):
         # feature length for feature extractor
         configs.features_len = 1
         self.feature_extractor = CNN_ATTN(configs)
-
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
 
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
-            weight_decay=hparams["weight_decay"])
-
-        self.cross_entropy = nn.CrossEntropyLoss()
-
+            weight_decay=hparams["weight_decay"]
+        )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
         self.device = device
 
-    def update(self, src_x, src_y, tgt_x):
-        self.optimizer.zero_grad()
 
-        # Extract features
-        src_feature = self.feature_extractor(src_x)
-        tgt_feature = self.feature_extractor(tgt_x)
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
 
-        # source classification loss
-        y_pred = self.classifier(src_feature)
-        src_cls_loss = self.cross_entropy(y_pred, src_y)
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)         # extract source features
 
-        # MMD loss
-        domain_loss_intra = self.mmd_loss(src_struct=src_feature,
-                                          tgt_struct=tgt_feature, weight=self.hparams['domain_loss_wt'])
+            # Extract features
+            src_feature = self.feature_extractor(src_x)
+            tgt_feature = self.feature_extractor(trg_x)
 
-        # total loss
-        total_loss = self.hparams['src_cls_loss_wt'] * src_cls_loss + domain_loss_intra
+            # source classification loss
+            y_pred = self.classifier(src_feature)
+            src_cls_loss = self.cross_entropy(y_pred, src_y)
 
-        # calculate gradients
-        total_loss.backward()
+            # MMD loss
+            domain_loss_intra = self.mmd_loss(src_struct=src_feature,
+                                            tgt_struct=tgt_feature, weight=self.hparams['domain_loss_wt'])
 
-        # update the weights
-        self.optimizer.step()
+            # total loss
+            total_loss = self.hparams['src_cls_loss_wt'] * src_cls_loss + domain_loss_intra
 
-        return {'Total_loss': total_loss.item(), 'MMD_loss': domain_loss_intra.item(),
-                'Src_cls_loss': src_cls_loss.item()}
+            # remove old gradients
+            self.optimizer.zero_grad()
+            # calculate gradients
+            total_loss.backward()
+            # update the weights
+            self.optimizer.step()
 
+            losses =  {'Total_loss': total_loss.item(), 'MMD_loss': domain_loss_intra.item(),
+                    'Src_cls_loss': src_cls_loss.item()}
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
     def mmd_loss(self, src_struct, tgt_struct, weight):
         delta = torch.mean(src_struct - tgt_struct, dim=-2)
         loss_value = torch.norm(delta, 2) * weight
@@ -871,81 +930,98 @@ class SASA(nn.Module):
 
 
 class CoTMix(Algorithm):
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(CoTMix, self).__init__(configs)
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+         # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
+        self.device = device
 
+        # Aligment losses
         self.contrastive_loss = NTXentLoss(device, hparams["batch_size"], 0.2, True)
         self.entropy_loss = ConditionalEntropyLoss()
         self.sup_contrastive_loss = SupConLoss(device)
 
-    def update(self, src_x, src_y, trg_x):
-        # ====== Temporal Mixup =====================
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
+
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)         # extract source features
+
+            # ====== Temporal Mixup =====================
+            src_dominant, trg_dominant = self.temporal_mixup(src_x, trg_x)
+
+            # ====== Source =====================
+            self.optimizer.zero_grad()
+
+            # Src original features
+            src_orig_feat = self.feature_extractor(src_x)
+            src_orig_logits = self.classifier(src_orig_feat)
+
+            # Target original features
+            trg_orig_feat = self.feature_extractor(trg_x)
+            trg_orig_logits = self.classifier(trg_orig_feat)
+
+            # -----------  The two main losses
+            # Cross-Entropy loss
+            src_cls_loss = self.cross_entropy(src_orig_logits, src_y)
+            loss = src_cls_loss * round(self.hparams["src_cls_weight"], 2)
+
+            # Target Entropy loss
+            trg_entropy_loss = self.entropy_loss(trg_orig_logits)
+            loss += trg_entropy_loss * round(self.hparams["trg_entropy_weight"], 2)
+
+            # -----------  Auxiliary losses
+            # Extract source-dominant mixup features.
+            src_dominant_feat = self.feature_extractor(src_dominant)
+            src_dominant_logits = self.classifier(src_dominant_feat)
+
+            # supervised contrastive loss on source domain side
+            src_concat = torch.cat([src_orig_logits.unsqueeze(1), src_dominant_logits.unsqueeze(1)], dim=1)
+            src_supcon_loss = self.sup_contrastive_loss(src_concat, src_y)
+            loss += src_supcon_loss * round(self.hparams["src_supCon_weight"], 2)
+
+            # Extract target-dominant mixup features.
+            trg_dominant_feat = self.feature_extractor(trg_dominant)
+            trg_dominant_logits = self.classifier(trg_dominant_feat)
+
+            # Unsupervised contrastive loss on target domain side
+            trg_con_loss = self.contrastive_loss(trg_orig_logits, trg_dominant_logits)
+            loss += trg_con_loss * round(self.hparams["trg_cont_weight"], 2)
+
+            loss.backward()
+            self.optimizer.step()
+
+            losses =  {'Total_loss': loss.item(),
+                    'src_cls_loss': src_cls_loss.item(),
+                    'trg_entropy_loss': trg_entropy_loss.item(),
+                    'src_supcon_loss': src_supcon_loss.item(),
+                    'trg_con_loss': trg_con_loss.item()
+                    }
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()           
+
+    def temporal_mixup(self,src_x, trg_x):
+        
         mix_ratio = round(self.hparams["mix_ratio"], 2)
         temporal_shift = self.hparams["temporal_shift"]
         h = temporal_shift // 2  # half
 
         src_dominant = mix_ratio * src_x + (1 - mix_ratio) * \
-                       torch.mean(torch.stack([torch.roll(trg_x, -i, 2) for i in range(-h, h)], 2), 2)
+                    torch.mean(torch.stack([torch.roll(trg_x, -i, 2) for i in range(-h, h)], 2), 2)
 
         trg_dominant = mix_ratio * trg_x + (1 - mix_ratio) * \
-                       torch.mean(torch.stack([torch.roll(src_x, -i, 2) for i in range(-h, h)], 2), 2)
-
-        # ====== Source =====================
-        self.optimizer.zero_grad()
-
-        # Src original features
-        src_orig_feat = self.feature_extractor(src_x)
-        src_orig_logits = self.classifier(src_orig_feat)
-
-        # Target original features
-        trg_orig_feat = self.feature_extractor(trg_x)
-        trg_orig_logits = self.classifier(trg_orig_feat)
-
-        # -----------  The two main losses
-        # Cross-Entropy loss
-        src_cls_loss = self.cross_entropy(src_orig_logits, src_y)
-        loss = src_cls_loss * round(self.hparams["src_cls_weight"], 2)
-
-        # Target Entropy loss
-        trg_entropy_loss = self.entropy_loss(trg_orig_logits)
-        loss += trg_entropy_loss * round(self.hparams["trg_entropy_weight"], 2)
-
-        # -----------  Auxiliary losses
-        # Extract source-dominant mixup features.
-        src_dominant_feat = self.feature_extractor(src_dominant)
-        src_dominant_logits = self.classifier(src_dominant_feat)
-
-        # supervised contrastive loss on source domain side
-        src_concat = torch.cat([src_orig_logits.unsqueeze(1), src_dominant_logits.unsqueeze(1)], dim=1)
-        src_supcon_loss = self.sup_contrastive_loss(src_concat, src_y)
-        loss += src_supcon_loss * round(self.hparams["src_supCon_weight"], 2)
-
-        # Extract target-dominant mixup features.
-        trg_dominant_feat = self.feature_extractor(trg_dominant)
-        trg_dominant_logits = self.classifier(trg_dominant_feat)
-
-        # Unsupervised contrastive loss on target domain side
-        trg_con_loss = self.contrastive_loss(trg_orig_logits, trg_dominant_logits)
-        loss += trg_con_loss * round(self.hparams["trg_cont_weight"], 2)
-
-        loss.backward()
-        self.optimizer.step()
-
-        return {'Total_loss': loss.item(),
-                'src_cls_loss': src_cls_loss.item(),
-                'trg_entropy_loss': trg_entropy_loss.item(),
-                'src_supcon_loss': src_supcon_loss.item(),
-                'trg_con_loss': trg_con_loss.item()
-                }
+                    torch.mean(torch.stack([torch.roll(src_x, -i, 2) for i in range(-h, h)], 2), 2)
+        
+        return src_dominant, trg_dominant
