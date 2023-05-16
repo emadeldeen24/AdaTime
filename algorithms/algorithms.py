@@ -1077,3 +1077,140 @@ class CoTMix(Algorithm):
                     torch.mean(torch.stack([torch.roll(src_x, -i, 2) for i in range(-h, h)], 2), 2)
         
         return src_dominant, trg_dominant
+    
+
+
+# Untied Approaches: (MCD)
+class MCD(Algorithm):
+    """
+    Maximum Classifier Discrepancy for Unsupervised Domain Adaptation
+    MCD: https://arxiv.org/pdf/1712.02560.pdf
+    """
+
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
+
+        self.feature_extractor = backbone(configs)
+        self.classifier1 = classifier(configs)
+        self.classifier2 = classifier(configs)
+
+        self.network = nn.Sequential(self.feature_extractor, self.classifier)
+
+
+        # optimizer and scheduler
+        self.optimizer_fe = torch.optim.Adam(
+            self.feature_extractor.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+                # optimizer and scheduler
+        self.optimizer_c1 = torch.optim.Adam(
+            self.classifier1.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+                # optimizer and scheduler
+        self.optimizer_c2 = torch.optim.Adam(
+            self.classifier2.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+        
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
+        self.hparams = hparams
+        # device
+        self.device = device
+
+        # Aligment losses
+        self.mmd_loss = MMD_loss()
+
+    def update(self, src_loader, trg_loader, avg_meter, logger):
+        # defining best and last model
+        best_src_risk = float('inf')
+        best_model = None
+
+        for epoch in range(1, self.hparams["num_epochs"] + 1):
+            
+            # source pretraining loop 
+            self.pretrain_epoch(src_loader, avg_meter)
+
+            # training loop 
+            self.training_epoch(src_loader, trg_loader, avg_meter, epoch)
+
+            # saving the best model based on src risk
+            if (epoch + 1) % 10 == 0 and avg_meter['Src_cls_loss'].avg < best_src_risk:
+                best_src_risk = avg_meter['Src_cls_loss'].avg
+                best_model = deepcopy(self.network.state_dict())
+
+
+            logger.debug(f'[Epoch : {epoch}/{self.hparams["num_epochs"]}]')
+            for key, val in avg_meter.items():
+                logger.debug(f'{key}\t: {val.avg:2.4f}')
+            logger.debug(f'-------------------------------------')
+        
+        last_model = self.network.state_dict()
+
+        return last_model, best_model
+
+    def pretraining_epoch(self, src_loader,avg_meter):
+        for src_x, src_y in src_loader:
+            src_x, src_y = src_x.to(self.device), src_y.to(self.device)
+          
+            src_feat = self.feature_extractor(src_x)
+            src_pred1 = self.classifier1(src_feat)
+            src_pred2 = self.classifier2(src_feat)
+
+            src_cls_loss1 = self.cross_entropy(src_pred1, src_y)
+            src_cls_loss2 = self.cross_entropy(src_pred2, src_y)
+
+            loss = src_cls_loss1 + src_cls_loss2
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses = {'Src_cls_loss': loss.item()}
+
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
+
+    def training_epoch(self, src_loader, trg_loader, avg_meter, epoch):
+
+        # Construct Joint Loaders 
+        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+
+        for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
+            src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)           # extract source features
+            
+            
+            # extract source features
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
+
+            # extract target features
+            trg_feat = self.feature_extractor(trg_x)
+
+            # calculate source classification loss
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
+
+            # calculate mmd loss
+            domain_loss = self.mmd_loss(src_feat, trg_feat)
+
+            # calculate the total loss
+            loss = self.hparams["domain_loss_wt"] * domain_loss + \
+                self.hparams["src_cls_loss_wt"] * src_cls_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses =  {'Total_loss': loss.item(), 'MMD_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
+
