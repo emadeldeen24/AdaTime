@@ -20,7 +20,7 @@ from algorithms.algorithms import get_algorithm_class
 from models.models import get_backbone_class
 from utils import AverageMeter
 
-from abstract_trainer import AbstractTrainer
+from trainers.abstract_trainer import AbstractTrainer
 
 warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
 parser = argparse.ArgumentParser()

@@ -44,7 +44,7 @@ if __name__ == "__main__":
 # 1- Change the naming of the functions ---> ( Done)
 # 2- Change the algorithms following DCORAL --> (Done)
 # 3- Keep one trainer for both train and test -->(Done)
-# 4- Creat the new joint loader that consider the all possible batches --> Done
-# 4- Add the best hparams 
-# 5- Implement Lower/Upper Bound Approach
-# 4- Add pretrain based methods (ADDA, MCD)
+# 4- Create the new joint loader that consider the all possible batches --> Done
+# 5- Implement Lower/Upper Bound Approach --> Done
+# 6- Add the best hparams --> Done
+# 7- Add pretrain based methods (ADDA, MCD, MDD)
