@@ -35,7 +35,9 @@ class HAR():
             'SASA': {'learning_rate': 0.001, 'src_cls_loss_wt': 0.9752, 'domain_loss_wt': 0.3892},
             'CoTMix': {'learning_rate': 0.001, 'mix_ratio': 0.9, 'temporal_shift': 14,
                        'src_cls_weight': 0.78, 'src_supCon_weight': 0.1, 'trg_cont_weight': 0.1,
-                       'trg_entropy_weight': 0.05}
+                       'trg_entropy_weight': 0.05},
+            'MCD': {'learning_rate': 1e-2, 'src_cls_loss_wt': 9.74, 'domain_loss_wt': 5.43},
+
 
         }
 

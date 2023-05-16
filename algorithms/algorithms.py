@@ -9,7 +9,7 @@ from models.loss import MMD_loss, CORAL, ConditionalEntropyLoss, VAT, LMMD_loss,
 from utils import EMA
 from torch.optim.lr_scheduler import StepLR
 from copy import deepcopy
-
+import torch.nn. functional as F
 
 def get_algorithm_class(algorithm_name):
     """Return the algorithm class with the given name."""
@@ -1091,7 +1091,7 @@ class MCD(Algorithm):
         super().__init__(configs, backbone)
 
         self.feature_extractor = backbone(configs)
-        self.classifier1 = classifier(configs)
+        self.classifier = classifier(configs)
         self.classifier2 = classifier(configs)
 
         self.network = nn.Sequential(self.feature_extractor, self.classifier)
@@ -1105,7 +1105,7 @@ class MCD(Algorithm):
         )
                 # optimizer and scheduler
         self.optimizer_c1 = torch.optim.Adam(
-            self.classifier1.parameters(),
+            self.classifier.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
@@ -1115,8 +1115,11 @@ class MCD(Algorithm):
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
-        
-        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+
+        self.lr_scheduler_fe = StepLR(self.optimizer_fe, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        self.lr_scheduler_c1 = StepLR(self.optimizer_c1, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        self.lr_scheduler_c2 = StepLR(self.optimizer_c2, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+
         # hparams
         self.hparams = hparams
         # device
@@ -1153,12 +1156,12 @@ class MCD(Algorithm):
 
         return last_model, best_model
 
-    def pretraining_epoch(self, src_loader,avg_meter):
+    def pretrain_epoch(self, src_loader,avg_meter):
         for src_x, src_y in src_loader:
             src_x, src_y = src_x.to(self.device), src_y.to(self.device)
           
             src_feat = self.feature_extractor(src_x)
-            src_pred1 = self.classifier1(src_feat)
+            src_pred1 = self.classifier(src_feat)
             src_pred2 = self.classifier2(src_feat)
 
             src_cls_loss1 = self.cross_entropy(src_pred1, src_y)
@@ -1166,16 +1169,21 @@ class MCD(Algorithm):
 
             loss = src_cls_loss1 + src_cls_loss2
 
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+            self.optimizer_c1.zero_grad()
+            self.optimizer_c2.zero_grad()
+            self.optimizer_fe.zero_grad()
 
+            loss.backward()
+
+            self.optimizer_c1.step()
+            self.optimizer_c2.step()
+            self.optimizer_fe.step()
+
+            
             losses = {'Src_cls_loss': loss.item()}
 
             for key, val in losses.items():
                 avg_meter[key].update(val, 32)
-
-        self.lr_scheduler.step()
 
     def training_epoch(self, src_loader, trg_loader, avg_meter, epoch):
 
@@ -1185,32 +1193,73 @@ class MCD(Algorithm):
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
             src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)           # extract source features
             
-            
+
             # extract source features
             src_feat = self.feature_extractor(src_x)
-            src_pred = self.classifier(src_feat)
+            src_pred1 = self.classifier(src_feat)
+            src_pred2 = self.classifier2(src_feat)
 
-            # extract target features
-            trg_feat = self.feature_extractor(trg_x)
+            # source losses
+            src_cls_loss1 = self.cross_entropy(src_pred1, src_y)
+            src_cls_loss2 = self.cross_entropy(src_pred2, src_y)
+            loss_s = src_cls_loss1 + src_cls_loss2
+            
 
-            # calculate source classification loss
-            src_cls_loss = self.cross_entropy(src_pred, src_y)
+            # Freeze the feature extractor
+            for k, v in self.feature_extractor.named_parameters():
+                v.requires_grad = False
+            # update C1 and C2 to maximize their difference on target sample
+            trg_feat = self.feature_extractor(trg_x) 
+            trg_pred1 = self.classifier(trg_feat.detach())
+            trg_pred2 = self.classifier2(trg_feat.detach())
 
-            # calculate mmd loss
-            domain_loss = self.mmd_loss(src_feat, trg_feat)
 
-            # calculate the total loss
-            loss = self.hparams["domain_loss_wt"] * domain_loss + \
-                self.hparams["src_cls_loss_wt"] * src_cls_loss
+            loss_dis = self.discrepancy(trg_pred1, trg_pred2)
 
-            self.optimizer.zero_grad()
+            loss = loss_s - loss_dis
+            
             loss.backward()
-            self.optimizer.step()
+            self.optimizer_c1.step()
+            self.optimizer_c2.step()
 
-            losses =  {'Total_loss': loss.item(), 'MMD_loss': domain_loss.item(), 'Src_cls_loss': src_cls_loss.item()}
+            self.optimizer_c1.zero_grad()
+            self.optimizer_c2.zero_grad()
+            self.optimizer_fe.zero_grad()
+
+            # Freeze the classifiers
+            for k, v in self.classifier.named_parameters():
+                v.requires_grad = False
+            for k, v in self.classifier2.named_parameters():
+                v.requires_grad = False
+                        # Freeze the feature extractor
+            for k, v in self.feature_extractor.named_parameters():
+                v.requires_grad = True
+            # update feature extractor to minimize the discrepaqncy on target samples
+            trg_feat = self.feature_extractor(trg_x)        
+            trg_pred1 = self.classifier(trg_feat)
+            trg_pred2 = self.classifier2(trg_feat)
+
+
+            loss_dis_t = self.discrepancy(trg_pred1, trg_pred2)
+            domain_loss = self.hparams["domain_loss_wt"] * loss_dis_t 
+
+            domain_loss.backward()
+            self.optimizer_fe.step()
+
+            self.optimizer_fe.zero_grad()
+            self.optimizer_c1.zero_grad()
+            self.optimizer_c2.zero_grad()
+
+
+            losses =  {'Total_loss': loss.item(), 'MMD_loss': domain_loss.item()}
 
             for key, val in losses.items():
                 avg_meter[key].update(val, 32)
 
-        self.lr_scheduler.step()
+        self.lr_scheduler_fe.step()
+        self.lr_scheduler_c1.step()
+        self.lr_scheduler_c2.step()
 
+    def discrepancy(self, out1, out2):
+
+        return torch.mean(torch.abs(F.softmax(out1) - F.softmax(out2)))
