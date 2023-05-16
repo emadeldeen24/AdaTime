@@ -81,27 +81,35 @@ The experiments are organised in a hierarchical way such that:
 To train a model:
 
 ```
-python main.py  --experiment_description exp1  \
-                --run_description run_1 \
+python main.py  --phase train  \
+                --experiment_description exp1  \
                 --da_method DANN \
                 --dataset HHAR \
                 --backbone CNN \
                 --num_runs 5 \
-                --is_sweep False
+```
+To test a model:
+
+```
+python main.py  --phase test  \
+                --experiment_description exp1  \
+                --da_method DANN \
+                --dataset HHAR \
+                --backbone CNN \
+                --num_runs 5 \
 ```
 ### Launching a sweep
 Sweeps here are deployed on [Wandb](https://wandb.ai/), which makes it easier for visualization, following the training progress, organizing sweeps, and collecting results.
 
 ```
-python main.py  --experiment_description exp1_sweep  \
+python main_sweep.py  --experiment_description exp1_sweep  \
                 --run_description sweep_over_lr \
                 --da_method DANN \
                 --dataset HHAR \
                 --backbone CNN \
                 --num_runs 5 \
-                --is_sweep True \
-                --num_sweeps 50 \
                 --sweep_project_wandb TEST
+                --num_sweeps 50 \
 ```
 Upon the run, you will find the running progress in the specified project page in wandb.
 
@@ -109,7 +117,8 @@ Upon the run, you will find the running progress in the specified project page i
 
 
 ### Upper and Lower bounds
-To obtain the source-only or the target-only results, you can run `same_domain_trainer.py` file.
+- To obtain the source-only or the lower bound you can choose the da_method to be `NO_ADAPT`.
+- To obtain the the target-only or the upper bound you can choose the da_method `TARGET_ONLY`
 
 ## Results
 - Each run will have all the cross-domain scenarios results in the format `src_to_trg_run_x`, where `x`
