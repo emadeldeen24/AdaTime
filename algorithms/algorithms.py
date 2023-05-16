@@ -65,39 +65,91 @@ class Algorithm(torch.nn.Module):
         raise NotImplementedError
        
 
-class Lower_Upper_bounds(Algorithm):
+class NO_ADAPT(Algorithm):
     """
     Lower bound: train on source and test on target.
-    Upper bound: train on target and test on target.
     """
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
 
-    def __init__(self, backbone_fe, configs, hparams, device):
-        super(Lower_Upper_bounds, self).__init__(configs)
-
-        self.feature_extractor = backbone_fe(configs)
-        self.classifier = classifier(configs)
-        self.network = nn.Sequential(self.feature_extractor, self.classifier)
-
+        # optimizer and scheduler
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=hparams["learning_rate"],
             weight_decay=hparams["weight_decay"]
         )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
         self.hparams = hparams
+        # device
+        self.device = device
 
-    def update(self, src_x, src_y):
-        src_feat = self.feature_extractor(src_x)
-        src_pred = self.classifier(src_feat)
+    def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
+        for src_x, src_y in src_loader:
+            
+            src_x, src_y = src_x.to(self.device), src_y.to(self.device)
+            src_feat = self.feature_extractor(src_x)
+            src_pred = self.classifier(src_feat)
 
-        src_cls_loss = self.cross_entropy(src_pred, src_y)
+            src_cls_loss = self.cross_entropy(src_pred, src_y)
 
-        loss = src_cls_loss
+            loss = src_cls_loss
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-        return {'Src_cls_loss': src_cls_loss.item()}
+            losses = {'Src_cls_loss': src_cls_loss.item()}
+
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
+    
+
+class TARGET_ONLY(Algorithm):
+    """
+    Upper bound: train on target and test on target.
+    """
+
+    def __init__(self, backbone, configs, hparams, device):
+        super().__init__(configs, backbone)
+
+        # optimizer and scheduler
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=hparams["learning_rate"],
+            weight_decay=hparams["weight_decay"]
+        )
+        self.lr_scheduler = StepLR(self.optimizer, step_size=hparams['step_size'], gamma=hparams['lr_decay'])
+        # hparams
+        self.hparams = hparams
+        # device
+        self.device = device
+
+    def training_epoch(self, src_loader, trg_loader, avg_meter, epoch):
+
+        for trg_x, trg_y in trg_loader:
+
+            trg_x, trg_y = trg_x.to(self.device), trg_y.to(self.device)
+
+            trg_feat = self.feature_extractor(trg_x)
+            trg_pred = self.classifier(trg_feat)
+
+            trg_cls_loss = self.cross_entropy(trg_pred, trg_y)
+
+            loss = trg_cls_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            losses = {'Trg_cls_loss': trg_cls_loss.item()}
+
+            for key, val in losses.items():
+                avg_meter[key].update(val, 32)
+
+        self.lr_scheduler.step()
 
 
 class Deep_Coral(Algorithm):

@@ -18,8 +18,8 @@ class HAR():
 
         }
         self.alg_hparams = {
-            'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
-            'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'NO_ADAPT': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'TARGET_ONLY': {'learning_rate': 1e-3, 'trg_cls_loss_wt': 1},
             'DANN': {'learning_rate': 1e-2, 'src_cls_loss_wt': 9.74, 'domain_loss_wt': 5.43},
             'Deep_Coral': {'learning_rate': 5e-4, 'src_cls_loss_wt': 0.1013, 'coral_wt': 4.23},
             'DDC': {'learning_rate': 5e-3, 'src_cls_loss_wt': 6.24, 'domain_loss_wt': 6.36},
@@ -50,8 +50,8 @@ class EEG():
 
         }
         self.alg_hparams = {
-            'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
-            'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'NO_ADAPT': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'TARGET_ONLY': {'learning_rate': 1e-3, 'trg_cls_loss_wt': 1},
             'DANN': {'learning_rate': 0.0005, 'src_cls_loss_wt': 8.30, 'domain_loss_wt': 0.324, },
             'Deep_Coral': {'learning_rate': 0.0005, 'src_cls_loss_wt': 9.39, 'coral_wt': 0.19, },
             'DDC': {'learning_rate': 0.0005, 'src_cls_loss_wt': 2.951, 'domain_loss_wt': 8.923, },
@@ -81,8 +81,8 @@ class WISDM():
 
         }
         self.alg_hparams = {
-            'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
-            'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'NO_ADAPT': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'TARGET_ONLY': {'learning_rate': 1e-3, 'trg_cls_loss_wt': 1},
             'DANN': {'learning_rate': 1e-2, 'src_cls_loss_wt': 5.613, 'domain_loss_wt': 1.857},
             'Deep_Coral': {'learning_rate': 0.005, 'src_cls_loss_wt': 8.876, 'coral_wt': 5.56},
             'DDC': {'learning_rate': 1e-3, 'src_cls_loss_wt': 7.01, 'domain_loss_wt': 7.595},
@@ -112,8 +112,8 @@ class HHAR():
             'weight_decay': 1e-4,
         }
         self.alg_hparams = {
-            'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
-            'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'NO_ADAPT': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'TARGET_ONLY': {'learning_rate': 1e-3, 'trg_cls_loss_wt': 1},
             'DANN': {'learning_rate': 0.0005, 'src_cls_loss_wt': 0.9603, 'domain_loss_wt': 0.9238},
             'Deep_Coral': {'learning_rate': 0.0005, 'src_cls_loss_wt': 0.05931, 'coral_wt': 8.452},
             'DDC': {'learning_rate': 0.01, 'src_cls_loss_wt': 0.1593, 'domain_loss_wt': 0.2048},
@@ -144,8 +144,8 @@ class FD():
             'weight_decay': 1e-4,
         }
         self.alg_hparams = {
-            'Source_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
-            'Target_only': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'NO_ADAPT': {'learning_rate': 1e-3, 'src_cls_loss_wt': 1},
+            'TARGET_ONLY': {'learning_rate': 1e-3, 'trg_cls_loss_wt': 1},
             'DANN': {'learning_rate': 0.0005, 'src_cls_loss_wt': 0.9603, 'domain_loss_wt': 0.9238},
             'Deep_Coral': {'learning_rate': 0.0005, 'src_cls_loss_wt': 0.05931, 'coral_wt': 8.452},
             'DDC': {'learning_rate': 0.01, 'src_cls_loss_wt': 0.1593, 'domain_loss_wt': 0.2048},
