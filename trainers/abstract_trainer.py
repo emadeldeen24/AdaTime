@@ -82,7 +82,12 @@ class AbstractTrainer(object):
         self.algorithm = algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device)
         self.algorithm.to(self.device)
 
-    
+    def load_checkpoint(self, model_dir):
+        checkpoint = torch.load(os.path.join(self.home_path, model_dir, 'checkpoint.pt'))
+        last_model = checkpoint['last']
+        best_model = checkpoint['best']
+        return last_model, best_model
+
     def train_model(self):
         # Get the algorithm and the backbone network
         algorithm_class = get_algorithm_class(self.da_method)

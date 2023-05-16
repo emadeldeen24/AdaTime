@@ -33,19 +33,6 @@ class Test(AbstractTrainer):
         self.best_results = None
 
 
-    def load_checkpoint(self, model_dir):
-        checkpoint = torch.load(os.path.join(self.home_path, model_dir, 'checkpoint.pt'))
-        last_model = checkpoint['last']
-        best_model = checkpoint['best']
-        return last_model, best_model
-
-    def build_model(self):
-        # Get the algorithm and the backbone network
-        algorithm_class = get_algorithm_class(self.da_method)
-        backbone_fe = get_backbone_class(self.backbone)
-
-        return algorithm_class(backbone_fe, self.dataset_configs, self.hparams, self.device).to(self.device)
-
     def test(self):
 
         results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]

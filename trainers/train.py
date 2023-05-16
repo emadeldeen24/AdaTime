@@ -30,15 +30,17 @@ class Trainer(AbstractTrainer):
     def __init__(self, args):
         super().__init__(args)
 
-    def train(self):
+        self.results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
+        self.risks_columns = ["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"]
+
+
+    def fit(self):
 
         # table with metrics
-        results_columns = ["scenario", "run", "acc", "f1_score", "auroc"]
-        table_results = pd.DataFrame(columns=results_columns)
+        table_results = pd.DataFrame(columns=self.results_columns)
 
         # table with risks
-        risks_columns = ["scenario", "run", "src_risk", "few_shot_risk", "trg_risk"]
-        table_risks = pd.DataFrame(columns=risks_columns)
+        table_risks = pd.DataFrame(columns=self.risks_columns)
 
 
         # Trainer
@@ -75,11 +77,68 @@ class Trainer(AbstractTrainer):
                 table_risks = self.append_results_to_tables(table_risks, scenario, run_id, risks)
 
         # Calculate and append mean and std to tables
-        table_results = self.add_mean_std_table(table_results, results_columns)
-        table_risks = self.add_mean_std_table(table_risks, risks_columns)
+        table_results = self.add_mean_std_table(table_results, self.results_columns)
+        table_risks = self.add_mean_std_table(table_risks, self.risks_columns)
 
 
         # Save tables to file if needed
         self.save_tables_to_file(table_results, 'results')
         self.save_tables_to_file(table_risks, 'risks')
+
+    def test(self):
+        # Results dataframes
+        last_results = pd.DataFrame(columns=self.results_columns)
+        best_results = pd.DataFrame(columns=self.results_columns)
+
+        # Cross-domain scenarios
+        for src_id, trg_id in self.dataset_configs.scenarios:
+            for run_id in range(self.num_runs):
+                # fixing random seed
+                fix_randomness(run_id)
+
+                # Logging
+                self.scenario_log_dir = os.path.join(self.exp_log_dir, src_id + "_to_" + trg_id + "_run_" + str(run_id))
+
+                self.loss_avg_meters = collections.defaultdict(lambda: AverageMeter())
+
+                # Load data
+                self.load_data(src_id, trg_id)
+
+                # Build model
+                self.initialize_algorithm()
+
+                # Load chechpoint 
+                last_chk, best_chk = self.load_checkpoint(self.scenario_log_dir)
+
+                # Testing the last model
+                self.algorithm.network.load_state_dict(last_chk)
+                self.evaluate(self.trg_test_dl)
+                last_metrics = self.calculate_metrics()
+                last_results = self.append_results_to_tables(last_results, f"{src_id}_to_{trg_id}", run_id,
+                                                             last_metrics)
+                
+
+                # Testing the best model
+                self.algorithm.network.load_state_dict(best_chk)
+                self.evaluate(self.trg_test_dl)
+                best_metrics = self.calculate_metrics()
+                # Append results to tables
+                best_results = self.append_results_to_tables(best_results, f"{src_id}_to_{trg_id}", run_id,
+                                                             best_metrics)
+
+        summary_last = {metric: np.mean(last_results[metric]) for metric in self.results_columns[2:]}
+        summary_best = {metric: np.mean(best_results[metric]) for metric in self.results_columns[2:]}
+
+        # Calculate and append mean and std to tables
+        last_results = self.add_mean_std_table(last_results, self.results_columns)
+        best_results = self.add_mean_std_table(best_results, self.results_columns)
+
+        # Save tables to file if needed
+        self.save_tables_to_file(last_results, 'last_results')
+        self.save_tables_to_file(best_results, 'best_results')
+
+        for summary_name, summary in [('Last', summary_last), ('Best', summary_best)]:
+            for key, val in summary.items():
+                print(f'{summary_name}: {key}\t: {val:2.4f}')
+
 
