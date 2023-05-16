@@ -178,7 +178,12 @@ class Deep_Coral(Algorithm):
     def training_epoch(self,src_loader, trg_loader, avg_meter, epoch):
 
         # Construct Joint Loaders 
-        joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        # add if statement
+
+        if len(src_loader) > len(trg_loader):
+            joint_loader =enumerate(zip(src_loader, itertools.cycle(trg_loader)))
+        else:
+            joint_loader =enumerate(zip(itertools.cycle(src_loader), trg_loader))
 
         for step, ((src_x, src_y), (trg_x, _)) in joint_loader:
             src_x, src_y, trg_x = src_x.to(self.device), src_y.to(self.device), trg_x.to(self.device)
