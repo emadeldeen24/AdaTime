@@ -1,1 +1,0 @@
-data to be placed in this directory in folders. Each folder is the same name specified in the configs.
