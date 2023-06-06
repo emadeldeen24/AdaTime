@@ -126,8 +126,8 @@ class Trainer(AbstractTrainer):
                 best_results = self.append_results_to_tables(best_results, f"{src_id}_to_{trg_id}", run_id,
                                                              best_metrics)
 
-       last_scenario_mean_std = last_results.groupby('scenario')[['acc', 'f1_score', 'auroc']].agg(['mean', 'std'])
-       best_scenario_mean_std = best_results.groupby('scenario')[['acc', 'f1_score', 'auroc']].agg(['mean', 'std'])
+        last_scenario_mean_std = last_results.groupby('scenario')[['acc', 'f1_score', 'auroc']].agg(['mean', 'std'])
+        best_scenario_mean_std = best_results.groupby('scenario')[['acc', 'f1_score', 'auroc']].agg(['mean', 'std'])
 
 
         # Save tables to file if needed
